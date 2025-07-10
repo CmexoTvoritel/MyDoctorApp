@@ -22,3 +22,5 @@ dependencyResolutionManagement {
 rootProject.name = "MyDoctorApp"
 include(":app")
 include(":data")
+include(":core")
+include(":domain")

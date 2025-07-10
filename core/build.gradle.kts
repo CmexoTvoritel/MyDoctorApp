@@ -3,11 +3,10 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "com.asc.mydoctorapp.data"
+    namespace = "com.asc.mydoctorapp.core"
     compileSdk = 35
 
     defaultConfig {
@@ -27,8 +26,24 @@ android {
 dependencies {
 
     implementation(libs.androidx.core.ktx)
-    
-    // Hilt
+    implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.androidx.compose.bom))
+
+    //Dagger-hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    //Coroutines
+    api(libs.kotlinx.coroutines.core)
+
+    //Navigation
+    api(libs.androidx.navigation.compose)
+
+    //Preferences
+    implementation(libs.androidx.preference.ktx)
+
+    //Retrofit2 + okHttp
+    api(libs.retrofit)
+    api(libs.converter.gson)
+    api(libs.okhttp)
 }
