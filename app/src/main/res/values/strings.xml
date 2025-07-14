@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">MyDoctorApp</string>
+    <string name="bottom_bar_home_item">Главная</string>
+    <string name="bottom_bar_chat_item">Чат</string>
+    <string name="bottom_bar_records_item">Записи</string>
+    <string name="bottom_bar_profile_item">Профиль</string>
 </resources>
