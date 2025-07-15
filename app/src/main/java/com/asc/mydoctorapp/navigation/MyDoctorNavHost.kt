@@ -13,6 +13,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.navOptions
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.ui.login.LoginScreen
+import com.asc.mydoctorapp.ui.onboarding.OnboardingScreen
+import com.asc.mydoctorapp.ui.registration.RegistrationScreen
 import com.asc.mydoctorapp.ui.splash.SplashScreen
 
 enum class BottomBarItem(
@@ -72,6 +75,18 @@ fun MyDoctorNavHost(
             SplashScreen { route ->
                 navController.navigate(route)
             }
+        }
+
+        composable(route = AppRoutes.OnBoarding.route) {
+            OnboardingScreen()
+        }
+
+        composable(route = AppRoutes.Login.route) {
+            LoginScreen()
+        }
+
+        composable(route = AppRoutes.Registration.route) {
+            RegistrationScreen()
         }
         
         // Home Navigation Graph

@@ -31,7 +31,10 @@ class MainActivity : ComponentActivity() {
             
             // Определяем, нужно ли показывать боттомбар
             val shouldShowBottomBar = currentDestination?.route?.let { route ->
-                !route.startsWith(AppRoutes.Splash.route)
+                !route.startsWith(AppRoutes.Splash.route) &&
+                !route.startsWith(AppRoutes.OnBoarding.route) &&
+                !route.startsWith(AppRoutes.Login.route) &&
+                !route.startsWith(AppRoutes.Registration.route)
             } ?: false
             
             // Определяем текущий выбранный элемент боттомбара
