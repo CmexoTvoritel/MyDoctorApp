@@ -78,7 +78,9 @@ fun MyDoctorNavHost(
         }
 
         composable(route = AppRoutes.OnBoarding.route) {
-            OnboardingScreen()
+            OnboardingScreen() { route ->
+                navController.navigate(route)
+            }
         }
 
         composable(route = AppRoutes.Login.route) {

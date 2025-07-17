@@ -4,4 +4,14 @@
     <string name="bottom_bar_chat_item">Чат</string>
     <string name="bottom_bar_records_item">Записи</string>
     <string name="bottom_bar_profile_item">Профиль</string>
+    <string name="onboarding_page_1_title">Выявляйте симптомы с помощью ИИ-чата</string>
+    <string name="onboarding_page_1_subtitle">Опишите своё самочувствие, и умный чат подскажет, к какому врачу обратиться.</string>
+    <string name="onboarding_page_2_title">Выбирайте среди лучших специалистов и клиник вашего города</string>
+    <string name="onboarding_page_2_subtitle">Сравнивайте врачей по опыту, отзывам и рейтингу — и выбирайте подходящего.</string>
+    <string name="onboarding_page_3_title">Записывайте на приём себя и своих близких</string>
+    <string name="onboarding_page_3_subtitle">Управляйте медицинскими записями всей семьи в одном приложении.</string>
+    <string name="onboarding_page_4_title">Переносите или отменяйте запись прямо в приложении</string>
+    <string name="onboarding_page_4_subtitle">Меняйте дату и время визита в пару кликов — без звонков и ожидания.</string>
+    <string name="onboarding_page_5_title">Получайте только важные уведомления о записях и приёмах</string>
+    <string name="onboarding_page_5_subtitle">Напомним о приёме и сообщим, если что-то изменится — ничего лишнего.</string>
 </resources>
