@@ -84,11 +84,29 @@ fun MyDoctorNavHost(
         }
 
         composable(route = AppRoutes.Login.route) {
-            LoginScreen()
+            LoginScreen(
+                navigateTo = { route ->
+                    navController.navigate(route) {
+                        // Clear the back stack when navigating to main flow
+                        if (route == AppRoutes.Home.route) {
+                            popUpTo(AppRoutes.Login.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
         }
 
         composable(route = AppRoutes.Registration.route) {
-            RegistrationScreen()
+            RegistrationScreen(
+                navigateTo = { route ->
+                    navController.navigate(route) {
+                        // Clear the back stack when navigating to main flow
+                        if (route == AppRoutes.Home.route) {
+                            popUpTo(AppRoutes.Registration.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
         }
         
         // Home Navigation Graph
