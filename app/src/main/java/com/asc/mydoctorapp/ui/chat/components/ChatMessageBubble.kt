@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -27,8 +25,6 @@ private val DarkTealColor = Color(0xFF0F7D7A)
 @Composable
 fun ChatMessageBubble(
     message: ChatMessage,
-    aiReplyCount: Int,
-    onBookDoctorClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val alignment = if (message.author == Author.AI) Alignment.Start else Alignment.End
@@ -44,27 +40,6 @@ fun ChatMessageBubble(
             when (message.author) {
                 Author.AI -> AiBubble(message.text)
                 Author.USER -> UserBubble(message.text)
-            }
-        }
-        
-        // Отображаем кнопку "Записаться к врачу" только после третьего ответа ИИ
-        // и только под сообщением ИИ
-        if (message.author == Author.AI && aiReplyCount >= 3) {
-            Button(
-                onClick = onBookDoctorClick,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = DarkTealColor
-                ),
-                shape = RoundedCornerShape(8.dp),
-                modifier = Modifier
-                    .align(Alignment.Start)
-                    .padding(top = 8.dp, bottom = 8.dp)
-            ) {
-                Text(
-                    text = "Записаться к врачу",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White
-                )
             }
         }
     }
