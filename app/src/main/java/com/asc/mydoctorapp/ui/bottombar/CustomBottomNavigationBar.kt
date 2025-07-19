@@ -35,14 +35,13 @@ fun CustomBottomNavigationBar(
 ) {
     Surface(
         modifier = Modifier
-            .fillMaxWidth()
-            .background(color = Color.White),
+            .fillMaxWidth(),
         shadowElevation = 8.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
+                .background(color = Color.White),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.Top
         ) {

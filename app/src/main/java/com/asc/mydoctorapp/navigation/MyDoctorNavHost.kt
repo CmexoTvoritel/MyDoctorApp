@@ -13,11 +13,14 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.navOptions
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.ui.chat.ChatScreen
+import com.asc.mydoctorapp.ui.home.HomeScreen
 import com.asc.mydoctorapp.ui.login.LoginScreen
 import com.asc.mydoctorapp.ui.onboarding.OnboardingScreen
+import com.asc.mydoctorapp.ui.profile.ProfileScreen
+import com.asc.mydoctorapp.ui.records.RecordsScreen
 import com.asc.mydoctorapp.ui.registration.RegistrationScreen
 import com.asc.mydoctorapp.ui.splash.SplashScreen
-import com.asc.mydoctorapp.ui.home.HomeScreen
 
 enum class BottomBarItem(
     @StringRes val menuName: Int,
@@ -167,7 +170,7 @@ private fun NavGraphBuilder.chatNavigationGraph(navController: NavController) {
         route = "chat_graph"
     ) {
         composable(route = AppRoutes.Chat.route) {
-            // Содержимое страницы чатов
+            ChatScreen()
         }
         composable(route = AppRoutes.ChatDetails.route) {
             // Содержимое страницы с деталями чата
@@ -182,7 +185,11 @@ private fun NavGraphBuilder.recordsNavigationGraph(navController: NavController)
         route = "records_graph"
     ) {
         composable(route = AppRoutes.Records.route) {
-            // Содержимое страницы записей
+            RecordsScreen(
+                navigateTo = { route ->
+                    navController.navigate(route)
+                }
+            )
         }
         composable(route = AppRoutes.RecordsDetails.route) {
             // Содержимое страницы с деталями записи
@@ -196,7 +203,7 @@ private fun NavGraphBuilder.profileNavigationGraph(navController: NavController)
         route = "profile_graph"
     ) {
         composable(route = AppRoutes.Profile.route) {
-
+            ProfileScreen()
         }
         composable(route = AppRoutes.ProfileSettings.route) {
 
