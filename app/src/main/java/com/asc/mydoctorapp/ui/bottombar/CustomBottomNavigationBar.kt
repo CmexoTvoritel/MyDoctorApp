@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -19,8 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.asc.mydoctorapp.navigation.BottomBarItem
 
 @Composable
@@ -32,7 +36,7 @@ fun CustomBottomNavigationBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .background(color = Color.White),
         shadowElevation = 8.dp
     ) {
         Row(
@@ -40,7 +44,7 @@ fun CustomBottomNavigationBar(
                 .fillMaxWidth()
                 .background(MaterialTheme.colorScheme.surface),
             horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             bottomBarItems.forEach { item ->
                 val isSelected = selectedBottomBarItem == item
@@ -68,23 +72,28 @@ private fun BottomBarItemComponent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val tint = if (isSelected) {
-            Color.Red // Временный цвет для активного состояния
+            Color(0xFF43B3AE)
         } else {
-            MaterialTheme.colorScheme.onSurfaceVariant
+            Color.Black
         }
 
         Icon(
             painter = painterResource(id = item.icon),
             contentDescription = stringResource(id = item.menuName),
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(28.dp),
             tint = tint
         )
         
         Text(
             text = stringResource(id = item.menuName),
-            style = MaterialTheme.typography.bodySmall,
-            color = tint,
+            style = TextStyle(
+                fontWeight = FontWeight.Normal,
+                fontSize = 16.sp
+            ),
+            color = Color.Black,
             textAlign = TextAlign.Center
         )
+
+        Spacer(modifier = Modifier.height(height = 18.dp))
     }
 }
