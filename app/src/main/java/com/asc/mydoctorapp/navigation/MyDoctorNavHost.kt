@@ -17,6 +17,7 @@ import com.asc.mydoctorapp.ui.login.LoginScreen
 import com.asc.mydoctorapp.ui.onboarding.OnboardingScreen
 import com.asc.mydoctorapp.ui.registration.RegistrationScreen
 import com.asc.mydoctorapp.ui.splash.SplashScreen
+import com.asc.mydoctorapp.ui.home.HomeScreen
 
 enum class BottomBarItem(
     @StringRes val menuName: Int,
@@ -147,7 +148,11 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
         route = "home_graph"
     ) {
         composable(route = AppRoutes.Home.route) {
-            // Содержимое главной страницы
+            HomeScreen(
+                navigateTo = { route ->
+                    navController.navigate(route)
+                }
+            )
         }
         composable(route = AppRoutes.HomeDetails.route) {
             // Содержимое страницы с деталями

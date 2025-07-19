@@ -244,8 +244,6 @@ fun LoginScreen(
                         fontSize = 17.sp
                     )
                     
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
                     Button(
                         onClick = { viewModel.obtainEvent(LoginEvent.OnVkLoginClick) },
                         modifier = Modifier
