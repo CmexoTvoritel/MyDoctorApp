@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,12 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.List
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Phone
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,13 +30,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.ui.profile.viewmodel.ProfileViewModel
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileAction
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileEvent
@@ -87,8 +84,7 @@ fun ProfileScreen(
             )
             
             Spacer(modifier = Modifier.height(24.dp))
-            
-            // Карточки действий
+
             FavoritesCard(
                 favoritesCount = uiState.favoritesCount,
                 onClick = { viewModel.obtainEvent(ProfileEvent.OnFavoritesClick) }
@@ -109,13 +105,11 @@ fun ProfileScreen(
             )
             
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Блок "Остались вопросы? Напишите нам!"
+
             SupportCard(
                 onClick = { viewModel.obtainEvent(ProfileEvent.OnSupportClick) }
             )
-            
-            // Отступ снизу
+
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
@@ -131,27 +125,17 @@ fun ProfileHeader(
         .fillMaxWidth()
         .padding(top = 16.dp)
     ) {
-        // Кнопка настроек
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(32.dp)
-                .clip(CircleShape)
-                .clickable { onSettingsClick() }
-                .padding(4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = "Настройки",
-                tint = TealColor,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-        
+        Icon(
+            painter = painterResource(id = R.drawable.ic_settings),
+            contentDescription = "Настройки",
+            tint = Color.Unspecified,
+            modifier = Modifier.size(36.dp)
+                .align(alignment = Alignment.TopEnd)
+        )
         // Аватар и имя пользователя
-        Column(
-            horizontalAlignment = Alignment.Start,
+        Row(
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
             // Аватар пользователя
@@ -171,15 +155,29 @@ fun ProfileHeader(
                 }
             }
             
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Имя пользователя
-            Text(
-                text = uiState.userName,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black.copy(alpha = 0.87f)
-            )
+            Spacer(modifier = Modifier.width(width = 8.dp))
+            Column(
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = uiState.userName,
+                    style = TextStyle(
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "09.01.2005",
+                    style = TextStyle(
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black
+                    )
+                )
+            }
+
         }
     }
 }
@@ -195,7 +193,7 @@ fun FavoritesCard(
                 imageVector = Icons.Filled.Favorite,
                 contentDescription = "Избранное",
                 tint = TealColor,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size(28.dp)
             )
         },
         title = "Избранное",
@@ -212,10 +210,10 @@ fun ReviewsCard(
     ActionCard(
         icon = {
             Icon(
-                imageVector = Icons.Outlined.Person,
+                painter = painterResource(id = R.drawable.ic_profile_message),
                 contentDescription = "Отзывы",
-                tint = TealColor,
-                modifier = Modifier.size(24.dp)
+                tint = Color.Unspecified,
+                modifier = Modifier.size(28.dp)
             )
         },
         title = "Мои отзывы",
@@ -232,10 +230,10 @@ fun MedicalBookCard(
     ActionCard(
         icon = {
             Icon(
-                imageVector = Icons.Outlined.List,
+                painter = painterResource(id = R.drawable.ic_profile_appointment),
                 contentDescription = "Медкнижка",
-                tint = TealColor,
-                modifier = Modifier.size(24.dp)
+                tint = Color.Unspecified,
+                modifier = Modifier.size(28.dp)
             )
         },
         title = "Медкнижка",
@@ -272,21 +270,27 @@ fun SupportCard(
             ) {
                 Text(
                     text = "Остались вопросы?",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black.copy(alpha = 0.87f)
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    color = Color.Black.copy(alpha = 0.7f)
                 )
                 Text(
                     text = "Напишите нам!",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black.copy(alpha = 0.87f)
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    color = Color.Black.copy(alpha = 0.7f)
                 )
             }
-            
+
             Icon(
-                imageVector = Icons.Outlined.Phone,
-                contentDescription = "Поддержка",
-                tint = TealColor,
-                modifier = Modifier.size(32.dp)
+                modifier = Modifier.size(30.dp),
+                painter = painterResource(id = R.drawable.ic_question_widget),
+                contentDescription = "FAQ",
+                tint = Color.Unspecified
             )
         }
     }
@@ -318,26 +322,26 @@ fun ActionCard(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            // Иконка
-            Box(modifier = Modifier.size(24.dp)) {
-                icon()
-            }
-            
+            icon()
             Spacer(modifier = Modifier.width(16.dp))
-            
-            // Текстовый контент
+
             Column {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black.copy(alpha = 0.87f)
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
                 )
-                
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = subtitle,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black.copy(alpha = 0.6f)
+                    style = TextStyle(
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black
+                    )
                 )
             }
         }
