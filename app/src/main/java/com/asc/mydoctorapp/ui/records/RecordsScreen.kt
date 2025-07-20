@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -24,9 +23,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.asc.mydoctorapp.ui.records.components.RecordCard
 import com.asc.mydoctorapp.ui.records.viewmodel.RecordsViewModel
@@ -54,42 +56,45 @@ fun RecordsScreen(
             }
         }
     }
-    
-    Scaffold(
-        containerColor = Color.White,
-        bottomBar = {
-            BottomButton(
-                selectedTab = state?.selectedTab ?: RecordsTab.CURRENT,
-                onPrimaryButtonClick = { viewModel.obtainEvent(RecordsEvent.OnPrimaryButtonClick) }
-            )
-        }
-    ) { paddingValues ->
-        Column(
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = Color.White)
+    ) {
+        // Вкладки
+        TabsRow(
+            selectedTab = state?.selectedTab ?: RecordsTab.CURRENT,
+            onTabSelected = { tab -> viewModel.obtainEvent(RecordsEvent.OnTabSelected(tab)) }
+        )
+
+        // Содержимое
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(horizontal = 24.dp)
         ) {
-            // Вкладки
-            TabsRow(
-                selectedTab = state?.selectedTab ?: RecordsTab.CURRENT,
-                onTabSelected = { tab -> viewModel.obtainEvent(RecordsEvent.OnTabSelected(tab)) }
-            )
-            
-            // Содержимое
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-            ) {
-                state?.let { uiState ->
-                    RecordsTabContent(
-                        uiState = uiState,
-                        onRecordClick = { recordId -> 
-                            viewModel.obtainEvent(RecordsEvent.OnRecordClick(recordId)) 
-                        },
-                        onFavoriteToggle = { recordId, newValue -> 
-                            viewModel.obtainEvent(RecordsEvent.OnFavoriteToggle(recordId, newValue))
-                        }
+            state?.let { uiState ->
+                Column {
+                    Box(modifier = Modifier.weight(weight = 1f)) {
+                        RecordsTabContent(
+                            uiState = uiState,
+                            onRecordClick = { recordId ->
+                                viewModel.obtainEvent(RecordsEvent.OnRecordClick(recordId))
+                            },
+                            onFavoriteToggle = { recordId, newValue ->
+                                viewModel.obtainEvent(
+                                    RecordsEvent.OnFavoriteToggle(
+                                        recordId,
+                                        newValue
+                                    )
+                                )
+                            }
+                        )
+                    }
+                    BottomButton(
+                        selectedTab = state?.selectedTab ?: RecordsTab.CURRENT,
+                        onPrimaryButtonClick = { viewModel.obtainEvent(RecordsEvent.OnPrimaryButtonClick) }
                     )
                 }
             }
@@ -168,7 +173,6 @@ private fun RecordsTabContent(
             )
         }
     } else {
-        // Список записей
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -217,7 +221,10 @@ private fun BottomButton(
         ) {
             Text(
                 text = buttonText,
-                style = MaterialTheme.typography.titleMedium,
+                style = TextStyle(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp
+                ),
                 color = Color.White
             )
         }

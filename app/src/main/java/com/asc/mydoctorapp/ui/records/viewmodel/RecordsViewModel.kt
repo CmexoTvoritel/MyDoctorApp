@@ -32,7 +32,7 @@ class RecordsViewModel @Inject constructor() : BaseSharedViewModel<RecordsUIStat
                 time = "15:00",
                 address = "Вавилова, 15",
                 clinic = "Клиника \"Здоровье\"",
-                photoRes = null,
+                photoRes = R.drawable.ic_doctor_placeholder,
                 isFavorite = false
             )
         ),
@@ -54,7 +54,7 @@ class RecordsViewModel @Inject constructor() : BaseSharedViewModel<RecordsUIStat
                 time = "15:00",
                 address = "Вавилова, 15",
                 clinic = "Клиника \"Здоровье\"",
-                photoRes = null,
+                photoRes = R.drawable.ic_doctor_placeholder,
                 isFavorite = false
             )
         )

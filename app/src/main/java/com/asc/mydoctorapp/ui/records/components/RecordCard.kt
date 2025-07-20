@@ -28,8 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.asc.mydoctorapp.ui.records.viewmodel.model.RecordUi
 
 private val TealColor = Color(0xFF43B3AE)
@@ -42,15 +44,14 @@ fun RecordCard(
     onFavoriteToggle: (String, Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val cardBorderColor = if (isPast) TealColor.copy(alpha = 0.4f) else TealColor
+    val cardBorderColor = if (isPast) TealColor.copy(alpha = 0.6f) else TealColor
     val cardBackgroundColor = if (isPast) Color(0xFFF2F2F2) else Color.White
-    val contentAlpha = if (isPast) 0.4f else 1f
+    val contentAlpha = if (isPast) 0.6f else 1f
     
     Surface(
         color = cardBackgroundColor,
         shape = RoundedCornerShape(8.dp),
         modifier = modifier
-            .height(64.dp)
             .border(
                 width = 1.dp,
                 color = cardBorderColor,
@@ -68,15 +69,6 @@ fun RecordCard(
                 contentAlpha = contentAlpha
             )
             
-            // Вертикальный разделитель
-            Divider(
-                color = cardBorderColor,
-                modifier = Modifier
-                    .padding(vertical = 8.dp)
-                    .width(1.dp)
-                    .fillMaxHeight()
-            )
-            
             // Информация о записи
             Row(
                 modifier = Modifier
@@ -85,21 +77,35 @@ fun RecordCard(
             ) {
                 // Имя и специальность
                 Column(
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(0.7f)
                 ) {
                     Text(
                         text = record.doctorName,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black.copy(alpha = 0.87f * contentAlpha)
+                        style = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                        ),
+                        color = Color.Black.copy(contentAlpha)
                     )
-                    
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = record.specialty,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Black.copy(alpha = 0.6f * contentAlpha)
+                        style = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp
+                        ),
+                        color = Color.Black.copy(alpha = 0.5f * contentAlpha)
                     )
                 }
+
+                Divider(
+                    color = cardBorderColor,
+                    modifier = Modifier
+                        .align(alignment = Alignment.CenterVertically)
+                        .padding(horizontal = 16.dp)
+                        .width(2.dp)
+                        .height(height = 54.dp)
+                )
                 
                 // Время и адрес
                 Column(
@@ -107,14 +113,20 @@ fun RecordCard(
                 ) {
                     Text(
                         text = record.time,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Black.copy(alpha = 0.87f * contentAlpha)
+                        style = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+                        ),
+                        color = Color.Black.copy(contentAlpha)
                     )
                     
                     Text(
                         text = "${record.address}\n${record.clinic}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.Black.copy(alpha = 0.6f * contentAlpha)
+                        style = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.sp,
+                        ),
+                        color = Color.Black.copy(contentAlpha)
                     )
                 }
             }
@@ -123,6 +135,7 @@ fun RecordCard(
             IconButton(
                 onClick = { onFavoriteToggle(record.id, !record.isFavorite) },
                 modifier = Modifier.size(24.dp)
+                    .align(alignment = Alignment.Top)
             ) {
                 Icon(
                     imageVector = if (record.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
@@ -136,34 +149,16 @@ fun RecordCard(
 
 @Composable
 private fun DoctorPhoto(photoRes: Int?, contentAlpha: Float) {
-    Box(
-        modifier = Modifier
-            .size(56.dp)
-            .padding(end = 8.dp)
+    Surface(
+        shape = RoundedCornerShape(size = 8.dp),
+        color = Color.Unspecified.copy(alpha = contentAlpha)
     ) {
-        Surface(
-            shape = CircleShape,
-            color = Color.LightGray.copy(alpha = contentAlpha)
-        ) {
-            if (photoRes != null) {
-                androidx.compose.foundation.Image(
-                    painter = painterResource(id = photoRes),
-                    contentDescription = "Doctor photo",
-                    modifier = Modifier.size(56.dp)
-                )
-            } else {
-                Box(
-                    modifier = Modifier.size(56.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Person,
-                        contentDescription = "Doctor",
-                        tint = Color.Gray.copy(alpha = contentAlpha),
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-            }
+        if (photoRes != null) {
+            androidx.compose.foundation.Image(
+                painter = painterResource(id = photoRes),
+                contentDescription = "Doctor photo",
+                modifier = Modifier.size(64.dp)
+            )
         }
     }
 }
