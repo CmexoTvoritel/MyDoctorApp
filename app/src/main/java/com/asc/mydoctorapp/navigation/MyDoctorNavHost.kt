@@ -16,13 +16,18 @@ import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.ui.chat.ChatScreen
 import com.asc.mydoctorapp.ui.doctordetail.DoctorDetailScreen
 import com.asc.mydoctorapp.ui.doctorlist.DoctorListScreen
+import com.asc.mydoctorapp.ui.doctorrecord.DoctorRecordScreen
+import com.asc.mydoctorapp.ui.finishrecord.FinishRecordScreen
 import com.asc.mydoctorapp.ui.home.HomeScreen
 import com.asc.mydoctorapp.ui.login.LoginScreen
 import com.asc.mydoctorapp.ui.onboarding.OnboardingScreen
 import com.asc.mydoctorapp.ui.profile.ProfileScreen
 import com.asc.mydoctorapp.ui.records.RecordsScreen
 import com.asc.mydoctorapp.ui.registration.RegistrationScreen
+import com.asc.mydoctorapp.ui.reviews.ReviewsScreen
 import com.asc.mydoctorapp.ui.splash.SplashScreen
+import java.time.LocalDate
+import java.time.LocalTime
 
 enum class BottomBarItem(
     @StringRes val menuName: Int,
@@ -60,6 +65,8 @@ enum class AppRoutes(val route: String) {
     DoctorList("home/doctorList"),
     DoctorDetails("home/doctorDetails"),
     ReviewsList("home/reviewsList"),
+    DoctorRecord("home/doctorRecord"),
+    FinishRecord("home/DoctorRecord"),
     Chat("chat"),
     ChatDetails("chat/details"),
     Records("records"),
@@ -178,6 +185,28 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
                 },
                 onNavigateBack = {
                     navController.popBackStack()
+                }
+            )
+        }
+        composable(route = AppRoutes.ReviewsList.route) {
+            ReviewsScreen()
+        }
+        composable(route = AppRoutes.DoctorRecord.route) {
+            DoctorRecordScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToConfirmation = { date, time ->
+                    navController.navigate(AppRoutes.FinishRecord.route)
+                }
+            )
+        }
+        composable(route = AppRoutes.FinishRecord.route) {
+            FinishRecordScreen(
+                date = LocalDate.now(),
+                time = LocalTime.now(),
+                onNavigateToMain = {
+                    navController.navigate(AppRoutes.Home.route)
                 }
             )
         }

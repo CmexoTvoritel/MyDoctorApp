@@ -67,7 +67,7 @@ fun DoctorDetailScreen(
     viewModel.viewActions().collectAsState(initial = null).value?.let { action ->
         when (action) {
             is DoctorDetailAction.NavigateBack -> onNavigateBack()
-            is DoctorDetailAction.NavigateToBooking -> onNavigateToScreen("booking/${action.doctorId}")
+            is DoctorDetailAction.NavigateToBooking -> onNavigateToScreen(AppRoutes.DoctorRecord.route)
             is DoctorDetailAction.NavigateToSupport -> {}
             is DoctorDetailAction.NavigateToReviewDetail -> onNavigateToScreen(AppRoutes.ReviewsList.route)
         }
