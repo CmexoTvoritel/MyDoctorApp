@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -31,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.navigation.AppRoutes
 import com.asc.mydoctorapp.ui.home.components.DoctorCard
 import com.asc.mydoctorapp.ui.home.viewmodel.HomeViewModel
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeAction
@@ -61,7 +64,7 @@ fun HomeScreen(
         viewModel.viewActions().collect { action ->
             when (action) {
                 is HomeAction.NavigateToChat -> navigateTo(action.route)
-                is HomeAction.NavigateToDoctorProfile -> navigateTo("doctor/${action.doctorId}")
+                is HomeAction.NavigateToDoctorProfile -> navigateTo(AppRoutes.DoctorDetails.route)
                 is HomeAction.NavigateToSpecialistsList -> navigateTo(action.route)
                 is HomeAction.NavigateToFaq -> navigateTo(action.route)
                 else -> {}
@@ -189,9 +192,14 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Заголовок секции специалистов
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    viewModel.obtainEvent(HomeEvent.OnSeeAllSpecialistsClick)
+                },
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
@@ -204,10 +212,7 @@ fun HomeScreen(
             )
             Spacer(modifier = Modifier.width(width = 4.dp))
             Icon(
-                modifier = Modifier.size(22.dp)
-                    .clickable {
-                        viewModel.obtainEvent(HomeEvent.OnSeeAllSpecialistsClick)
-                    },
+                modifier = Modifier.size(22.dp),
                 imageVector = Icons.Rounded.ArrowForward,
                 contentDescription = "Смотреть всех специалистов",
                 tint = TealColor

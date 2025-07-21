@@ -85,7 +85,9 @@ fun DoctorCard(
                         )
                     }
                     Icon(
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier
+                            .padding(start = 24.dp)
+                            .size(28.dp)
                             .clickable {
                                 onFavoriteToggle(doctor.id, !isFavorite)
                             },

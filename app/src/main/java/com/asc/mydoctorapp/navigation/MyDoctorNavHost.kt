@@ -14,6 +14,8 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navOptions
 import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.ui.chat.ChatScreen
+import com.asc.mydoctorapp.ui.doctordetail.DoctorDetailScreen
+import com.asc.mydoctorapp.ui.doctorlist.DoctorListScreen
 import com.asc.mydoctorapp.ui.home.HomeScreen
 import com.asc.mydoctorapp.ui.login.LoginScreen
 import com.asc.mydoctorapp.ui.onboarding.OnboardingScreen
@@ -55,7 +57,9 @@ enum class AppRoutes(val route: String) {
     Login("login"),
     Registration("registration"),
     Home("home"),
-    HomeDetails("home/details"),
+    DoctorList("home/doctorList"),
+    DoctorDetails("home/doctorDetails"),
+    ReviewsList("home/reviewsList"),
     Chat("chat"),
     ChatDetails("chat/details"),
     Records("records"),
@@ -157,8 +161,25 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
                 }
             )
         }
-        composable(route = AppRoutes.HomeDetails.route) {
-            // Содержимое страницы с деталями
+        composable(route = AppRoutes.DoctorList.route) {
+            DoctorListScreen(
+                onNavigateToScreen = { route ->
+                    navController.navigate(route)
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(route = AppRoutes.DoctorDetails.route) {
+            DoctorDetailScreen(
+                onNavigateToScreen = { route ->
+                    navController.navigate(route)
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

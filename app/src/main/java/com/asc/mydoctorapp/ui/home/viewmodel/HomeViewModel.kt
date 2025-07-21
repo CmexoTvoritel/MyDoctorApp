@@ -2,6 +2,7 @@ package com.asc.mydoctorapp.ui.home.viewmodel
 
 import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.core.utils.PreferencesManager
+import com.asc.mydoctorapp.navigation.AppRoutes
 import com.asc.mydoctorapp.ui.home.viewmodel.model.DoctorUi
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeAction
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeEvent
@@ -97,11 +98,11 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun handleAiChatStart() {
-        sendViewAction(HomeAction.NavigateToChat("ai_chat"))
+        sendViewAction(HomeAction.NavigateToChat(AppRoutes.Chat.route))
     }
 
     private fun handleSeeAllSpecialists() {
-        sendViewAction(HomeAction.NavigateToSpecialistsList("all_specialists"))
+        sendViewAction(HomeAction.NavigateToSpecialistsList(AppRoutes.DoctorList.route))
     }
 
     private fun handleDoctorCardClick(doctorId: String) {

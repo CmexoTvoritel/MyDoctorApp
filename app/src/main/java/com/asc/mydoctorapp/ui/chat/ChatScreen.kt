@@ -1,5 +1,6 @@
 package com.asc.mydoctorapp.ui.chat
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,6 +33,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -62,6 +65,7 @@ fun ChatScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(color = Color.White)
             .padding(bottom = 0.dp)
     ) {
         if (state?.messages?.isEmpty() == true) {
@@ -95,6 +99,20 @@ private fun ChatHistoryScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
+        Text(
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+            text = "ИИ консультант",
+            style = TextStyle(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 22.sp,
+                color = Color.Black
+            )
+        )
+        Box(
+            modifier = Modifier.fillMaxWidth()
+                .background(color = Color.Black.copy(alpha = 0.2f))
+                .height(height = 1.dp)
+        )
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -125,7 +143,7 @@ private fun ChatHistoryScreen(
                                 OutlinedButton(
                                     onClick = onBookDoctorClick,
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = TealColor
+                                        containerColor = TealColor
                                     ),
                                     shape = RoundedCornerShape(8.dp),
                                     border = androidx.compose.foundation.BorderStroke(
@@ -138,8 +156,9 @@ private fun ChatHistoryScreen(
                                 ) {
                                     Text(
                                         text = "Записаться к врачу",
-                                        fontSize = 16.sp,
-                                        color = TealColor
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color.White
                                     )
                                 }
                             }
