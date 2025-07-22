@@ -69,7 +69,7 @@ fun DoctorDetailScreen(
             is DoctorDetailAction.NavigateBack -> onNavigateBack()
             is DoctorDetailAction.NavigateToBooking -> onNavigateToScreen(AppRoutes.DoctorRecord.route)
             is DoctorDetailAction.NavigateToSupport -> {}
-            is DoctorDetailAction.NavigateToReviewDetail -> onNavigateToScreen(AppRoutes.ReviewsList.route)
+            is DoctorDetailAction.NavigateToReviewDetail -> onNavigateToScreen("home/reviewsList/false")
         }
     }
     

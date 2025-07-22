@@ -22,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,27 +42,26 @@ import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileAction
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileEvent
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileUIState
 
-// Основной цвет акцента для элементов
 private val TealColor = Color(0xFF43B3AE)
 
 @Composable
 fun ProfileScreen(
     navigateTo: (String) -> Unit = {},
-    viewModel: ProfileViewModel = hiltViewModel()
 ) {
+    val viewModel: ProfileViewModel = hiltViewModel()
     val state by viewModel.viewStates().collectAsState()
     
     // Обработка действий для навигации
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.viewActions().collect { action ->
             when (action) {
-                is ProfileAction.NavigateToSettings -> navigateTo("settings")
-                is ProfileAction.NavigateToFavorites -> navigateTo("favorites")
-                is ProfileAction.NavigateToReviews -> navigateTo("reviews")
-                is ProfileAction.NavigateToMedicalBookView -> navigateTo("medical_book_view")
-                is ProfileAction.NavigateToMedicalBookCreate -> navigateTo("medical_book_create")
-                is ProfileAction.NavigateToSupportChat -> navigateTo("support_chat")
-                is ProfileAction.NavigateToAvatarSelection -> navigateTo("avatar_selection")
+                is ProfileAction.NavigateToSettings -> {}
+                is ProfileAction.NavigateToFavorites -> {}
+                is ProfileAction.NavigateToReviews -> navigateTo("home/reviewsList/true")
+                is ProfileAction.NavigateToMedicalBookView -> {}
+                is ProfileAction.NavigateToMedicalBookCreate -> {}
+                is ProfileAction.NavigateToSupportChat -> {}
+                is ProfileAction.NavigateToAvatarSelection -> {}
                 else -> {}
             }
         }

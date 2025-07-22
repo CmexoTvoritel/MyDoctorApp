@@ -8,10 +8,12 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.navOptions
+import androidx.navigation.navArgument
 import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.ui.chat.ChatScreen
 import com.asc.mydoctorapp.ui.doctordetail.DoctorDetailScreen
@@ -64,7 +66,7 @@ enum class AppRoutes(val route: String) {
     Home("home"),
     DoctorList("home/doctorList"),
     DoctorDetails("home/doctorDetails"),
-    ReviewsList("home/reviewsList"),
+    ReviewsList("home/reviewsList/{isMyReviews}"),
     DoctorRecord("home/doctorRecord"),
     FinishRecord("home/DoctorRecord"),
     Chat("chat"),
@@ -188,8 +190,25 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
                 }
             )
         }
-        composable(route = AppRoutes.ReviewsList.route) {
-            ReviewsScreen()
+        composable(
+            route = AppRoutes.ReviewsList.route,
+            arguments = listOf(
+                navArgument("isMyReviews") {
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
+            )
+        ) { backStackEntry ->
+            val isMyReviews = backStackEntry.arguments?.getBoolean("isMyReviews") ?: false
+            ReviewsScreen(
+                isMyReviews = isMyReviews,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToEditReview = { reviewId ->
+                    // В будущем здесь может быть навигация к экрану редактирования отзыва
+                }
+            )
         }
         composable(route = AppRoutes.DoctorRecord.route) {
             DoctorRecordScreen(
@@ -253,7 +272,9 @@ private fun NavGraphBuilder.profileNavigationGraph(navController: NavController)
         route = "profile_graph"
     ) {
         composable(route = AppRoutes.Profile.route) {
-            ProfileScreen()
+            ProfileScreen { route ->
+                navController.navigate(route)
+            }
         }
         composable(route = AppRoutes.ProfileSettings.route) {
 
