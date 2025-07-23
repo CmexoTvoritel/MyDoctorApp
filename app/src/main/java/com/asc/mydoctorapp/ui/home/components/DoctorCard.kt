@@ -102,7 +102,7 @@ fun DoctorCard(
 
             Text(
                 modifier = Modifier.width(width = 100.dp),
-                text = doctor.name,
+                text = "${doctor.name}\n${doctor.surname}",
                 style = TextStyle(
                     fontWeight = FontWeight.Normal,
                     color = Color.Black,

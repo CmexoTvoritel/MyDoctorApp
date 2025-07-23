@@ -11,7 +11,8 @@ data class ChatUIState(
 data class ChatMessage(
     val id: String = UUID.randomUUID().toString(),
     val author: Author,
-    val text: String
+    val text: String,
+    val isLoading: Boolean = false
 )
 
 enum class Author { USER, AI }

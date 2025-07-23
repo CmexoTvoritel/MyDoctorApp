@@ -10,6 +10,7 @@ data class HomeUIState(
 data class DoctorUi(
     val id: String,
     val name: String,
+    val surname: String,
     val specialty: String,
     val rating: Float,
     val photoRes: Int          // локальный drawable или URL

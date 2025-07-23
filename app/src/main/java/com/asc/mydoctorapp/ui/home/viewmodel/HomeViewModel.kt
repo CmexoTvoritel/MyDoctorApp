@@ -1,6 +1,8 @@
 package com.asc.mydoctorapp.ui.home.viewmodel
 
+import androidx.lifecycle.viewModelScope
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.core.domain.usecase.GetDoctorsUseCase
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.navigation.AppRoutes
 import com.asc.mydoctorapp.ui.home.viewmodel.model.DoctorUi
@@ -9,52 +11,46 @@ import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeEvent
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeUIState
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val getDoctorsUseCase: GetDoctorsUseCase
 ) : BaseSharedViewModel<HomeUIState, HomeAction, HomeEvent>(
-    initialState = HomeUIState(
-        doctors = listOf(
-            DoctorUi(
-                id = "1",
-                name = "Иван Сидоров",
-                specialty = "кардиолог",
-                rating = 5.0f,
-                photoRes = R.drawable.ic_doctor_placeholder
-            ),
-            DoctorUi(
-                id = "2",
-                name = "Мария Петрова",
-                specialty = "гинеколог",
-                rating = 5.0f,
-                photoRes = R.drawable.ic_doctor_placeholder
-            ),
-            DoctorUi(
-                id = "3",
-                name = "Илья Петров",
-                specialty = "гастроэнтеролог",
-                rating = 4.9f,
-                photoRes = R.drawable.ic_doctor_placeholder
-            ),
-            DoctorUi(
-                id = "4",
-                name = "Анна Смирнова",
-                specialty = "невролог",
-                rating = 4.8f,
-                photoRes = R.drawable.ic_doctor_placeholder
-            ),
-            DoctorUi(
-                id = "5",
-                name = "Сергей Козлов",
-                specialty = "окулист",
-                rating = 4.7f,
-                photoRes = R.drawable.ic_doctor_placeholder
-            )
-        )
-    )
+    initialState = HomeUIState()
 ) {
+    
+    init {
+        loadDoctors()
+    }
+    
+    private fun loadDoctors() {
+        viewModelScope.launch {
+            try {
+                val doctors = getDoctorsUseCase("Clinic1")
+                    .take(5) // Показываем только первые 5 докторов
+                    .map { doctor ->
+                        DoctorUi(
+                            id = doctor.email, // Используем email как ID
+                            name = doctor.name,
+                            surname = doctor.surname,
+                            specialty = doctor.specialty,
+                            rating = 5.0f,
+                            photoRes = R.drawable.ic_doctor_placeholder
+                        )
+                    }
+                
+                updateViewState { state ->
+                    state.copy(doctors = doctors)
+                }
+            } catch (e: Exception) {
+                // Обработка ошибок загрузки
+                // Можно добавить состояние ошибки в HomeUIState если нужно
+            }
+        }
+    }
 
     override fun obtainEvent(viewEvent: HomeEvent) {
         when (viewEvent) {

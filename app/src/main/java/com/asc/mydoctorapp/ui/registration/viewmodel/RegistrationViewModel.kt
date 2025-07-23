@@ -1,17 +1,24 @@
 package com.asc.mydoctorapp.ui.registration.viewmodel
 
 import android.util.Patterns
+import androidx.lifecycle.viewModelScope
+import com.asc.mydoctorapp.core.domain.usecase.RegisterUserUseCase
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.ui.registration.viewmodel.model.RegistrationAction
 import com.asc.mydoctorapp.ui.registration.viewmodel.model.RegistrationEvent
 import com.asc.mydoctorapp.ui.registration.viewmodel.model.RegistrationUIState
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val registerUserUseCase: RegisterUserUseCase
 ): BaseSharedViewModel<RegistrationUIState, RegistrationAction, RegistrationEvent>(
     initialState = RegistrationUIState()
 ) {
@@ -156,12 +163,45 @@ class RegistrationViewModel @Inject constructor(
             )
         }
 
-        // Normally we would perform registration here
-        // For now, we'll just simulate a successful registration
-        // In a real app, this would be an async call to an auth service
-        
-        // Simulate successful registration after validation
-        sendViewAction(action = RegistrationAction.NavigateToHome)
+        viewModelScope.launch {
+            try {
+                // Parse the birth date from string in format DD.MM.YYYY
+                val birthDateFormatted = try {
+                    LocalDate.parse(birthDate, DateTimeFormatter.ofPattern("dd.MM.yyyy"))
+                } catch (e: DateTimeParseException) {
+                    updateViewState { state ->
+                        state.copy(
+                            isLoading = false,
+                            isBirthDateError = true
+                        )
+                    }
+                    sendViewAction(action = RegistrationAction.ShowError(
+                        "Неверный формат даты рождения. Используйте формат ДД.ММ.ГГГГ"
+                    ))
+                    return@launch
+                }
+
+                // Call the use case to register the user
+                val userToken = registerUserUseCase(name, birthDateFormatted, login, password)
+                
+                // Save the token to preferences
+                preferencesManager.userToken = userToken.value
+                
+                updateViewState { state ->
+                    state.copy(isLoading = false)
+                }
+                
+                // Navigate to home screen
+                sendViewAction(action = RegistrationAction.NavigateToHome)
+            } catch (e: Exception) {
+                updateViewState { state ->
+                    state.copy(isLoading = false)
+                }
+                sendViewAction(action = RegistrationAction.ShowError(
+                    e.message ?: "Ошибка регистрации"
+                ))
+            }
+        }
     }
 
     private fun isValidLogin(login: String): Boolean {

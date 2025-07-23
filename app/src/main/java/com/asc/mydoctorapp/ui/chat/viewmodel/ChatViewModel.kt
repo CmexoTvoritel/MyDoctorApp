@@ -1,6 +1,7 @@
 package com.asc.mydoctorapp.ui.chat.viewmodel
 
 import androidx.lifecycle.viewModelScope
+import com.asc.mydoctorapp.core.domain.usecase.SendPromptUseCase
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -8,7 +9,9 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ChatViewModel @Inject constructor() : BaseSharedViewModel<ChatUIState, ChatAction, ChatEvent>(
+class ChatViewModel @Inject constructor(
+    private val sendPromptUseCase: SendPromptUseCase
+) : BaseSharedViewModel<ChatUIState, ChatAction, ChatEvent>(
     initialState = ChatUIState()
 ) {
 
@@ -30,13 +33,7 @@ class ChatViewModel @Inject constructor() : BaseSharedViewModel<ChatUIState, Cha
     private fun handleSendClick() {
         val currentText = viewStates().value?.inputText ?: ""
         
-        if (viewStates().value?.messages?.isEmpty() == true) {
-            // Если чат пустой и нажали "Начать чат" - отправляем пустое сообщение для инициации чата
-            addMessage(Author.USER, "")
-            simulateAiResponse()
-            return
-        }
-        
+        // Проверяем, что текст не пустой - теперь не отправляем пустые сообщения автоматически
         if (currentText.isNotBlank()) {
             // Отправляем сообщение пользователя
             addMessage(Author.USER, currentText)
@@ -46,8 +43,11 @@ class ChatViewModel @Inject constructor() : BaseSharedViewModel<ChatUIState, Cha
                 state.copy(inputText = "")
             }
             
-            // Симулируем ответ AI
-            simulateAiResponse()
+            // Показываем индикатор загрузки (три точки)
+            showLoadingIndicator()
+            
+            // Отправляем запрос в API
+            sendPromptToApi(currentText)
         }
     }
     
@@ -66,36 +66,89 @@ class ChatViewModel @Inject constructor() : BaseSharedViewModel<ChatUIState, Cha
         }
     }
     
-    private fun simulateAiResponse() {
+    private fun showLoadingIndicator() {
+        // Добавляем сообщение с индикатором загрузки
+        updateViewState { state ->
+            val loadingMessage = ChatMessage(
+                author = Author.AI,
+                text = ".",
+                isLoading = true
+            )
+            state.copy(messages = listOf(loadingMessage) + state.messages)
+        }
+        
+        // Запускаем анимацию точек
         viewModelScope.launch {
-            // Имитация сетевой задержки
-            delay(600)
-            
-            // Генерируем ответ AI
-            val aiReply = generateAiReply()
-            addMessage(Author.AI, aiReply)
-            
-            // Увеличиваем счетчик ответов AI
-            updateViewState { state ->
-                state.copy(aiReplyCount = state.aiReplyCount + 1)
+            var dots = 0
+            while (viewStates().value?.messages?.firstOrNull()?.isLoading == true) {
+                dots = (dots % 3) + 1
+                val dotsText = ".".repeat(dots)
+                
+                updateViewState { state ->
+                    val messages = state.messages.toMutableList()
+                    if (messages.isNotEmpty() && messages[0].isLoading) {
+                        messages[0] = messages[0].copy(text = dotsText)
+                    }
+                    state.copy(messages = messages)
+                }
+                delay(300) // Меняем количество точек каждые 300 мс
             }
         }
     }
     
-    private fun generateAiReply(): String {
-        val replies = listOf(
-            "Понимаю ваше беспокойство. Расскажите подробнее о симптомах, которые вы испытываете?",
-            "Исходя из описанных симптомов, вам стоит обратиться к терапевту для первичной консультации. Он сможет направить вас к нужному специалисту.",
-            "Важно помнить, что самолечение может усугубить состояние. Лучше записаться на консультацию к врачу.",
-            "При таких симптомах рекомендую обратиться к неврологу. Хотите узнать больше о том, чего ожидать на приеме?",
-            "Это может быть связано с несколькими факторами. Специалист проведет необходимую диагностику и определит причину."
-        )
-        
-        val aiReplyCount = viewStates().value?.aiReplyCount ?: 0
-        return if (aiReplyCount < replies.size) {
-            replies[aiReplyCount]
-        } else {
-            replies.random()
+    private fun sendPromptToApi(prompt: String) {
+        viewModelScope.launch {
+            try {
+                // Вызываем реальный API через UseCase
+                val response = sendPromptUseCase(prompt)
+                
+                // Удаляем индикатор загрузки
+                removeLoadingIndicator()
+                
+                // Получаем текст ответа
+                val responseText = response.text
+                
+                // Добавляем пустое сообщение AI, которое будем заполнять посимвольно
+                addMessage(Author.AI, "")
+                
+                // Симулируем печатание по одному символу
+                animateTypingResponse(responseText)
+                
+                // Увеличиваем счетчик ответов AI
+                updateViewState { state ->
+                    state.copy(aiReplyCount = state.aiReplyCount + 1)
+                }
+            } catch (e: Exception) {
+                // Обработка ошибки
+                removeLoadingIndicator()
+                addMessage(Author.AI, "Произошла ошибка: ${e.message ?: "неизвестная ошибка"}")
+            }
+        }
+    }
+    
+    private fun removeLoadingIndicator() {
+        updateViewState { state ->
+            val messages = state.messages.toMutableList()
+            if (messages.isNotEmpty() && messages[0].isLoading) {
+                messages.removeAt(0)
+            }
+            state.copy(messages = messages)
+        }
+    }
+    
+    private suspend fun animateTypingResponse(fullText: String) {
+        for (i in 1..fullText.length) {
+            val partialText = fullText.substring(0, i)
+            
+            updateViewState { state ->
+                val messages = state.messages.toMutableList()
+                if (messages.isNotEmpty() && messages[0].author == Author.AI) {
+                    messages[0] = messages[0].copy(text = partialText)
+                }
+                state.copy(messages = messages)
+            }
+            
+            delay(30) // Задержка 30 мс между появлением символов
         }
     }
 }

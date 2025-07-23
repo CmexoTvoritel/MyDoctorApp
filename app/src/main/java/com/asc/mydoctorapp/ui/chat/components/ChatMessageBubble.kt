@@ -37,7 +37,7 @@ fun ChatMessageBubble(
             contentAlignment = contentAlignment
         ) {
             when (message.author) {
-                Author.AI -> AiBubble(message.text)
+                Author.AI -> AiBubble(message)
                 Author.USER -> UserBubble(message.text)
             }
         }
@@ -45,21 +45,33 @@ fun ChatMessageBubble(
 }
 
 @Composable
-private fun AiBubble(text: String) {
+private fun AiBubble(message: ChatMessage) {
     Surface(
         modifier = Modifier.widthIn(max = 250.dp),
         color = Color(0xFFF2F2F2),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Text(
-            text = text,
-            style = TextStyle(
-                fontWeight = FontWeight.Normal,
-                fontSize = 18.sp
-            ),
-            color = Color.Black,
-            modifier = Modifier.padding(12.dp)
-        )
+        if (message.isLoading) {
+            Text(
+                text = message.text, // Текст уже содержит нужное количество точек (от "." до "...")
+                style = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 18.sp
+                ),
+                color = Color.Black,
+                modifier = Modifier.padding(12.dp)
+            )
+        } else {
+            Text(
+                text = message.text,
+                style = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 18.sp
+                ),
+                color = Color.Black,
+                modifier = Modifier.padding(12.dp)
+            )
+        }
     }
 }
 

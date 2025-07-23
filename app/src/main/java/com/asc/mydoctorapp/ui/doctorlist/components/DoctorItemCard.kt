@@ -40,9 +40,9 @@ fun DoctorItemCard(
     Surface(
         border = BorderStroke(1.dp, Color(0xFF43B3AE)),
         shape = RoundedCornerShape(12.dp),
+        color = Color.White,
         modifier = Modifier
             .fillMaxWidth()
-            .background(color = Color.White)
             .clickable { onCardClick() }
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -62,7 +62,7 @@ fun DoctorItemCard(
 
             // Имя, спец, рейтинг
             Column(Modifier.weight(1f)) {
-                Text(doctor.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+                Text("${doctor.name} ${doctor.surname}", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                 Text(doctor.specialty, style = MaterialTheme.typography.bodyMedium, color = Color.Black.copy(alpha = 0.6f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     repeat(5) { Icon(Icons.Outlined.Star, null, tint = Color(0xFF43B3AE), modifier = Modifier.size(16.dp)) }

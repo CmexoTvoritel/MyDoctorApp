@@ -1,17 +1,20 @@
 package com.asc.mydoctorapp.ui.login.viewmodel
 
 import android.util.Patterns
+import com.asc.mydoctorapp.core.domain.usecase.LoginUserUseCase
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.ui.login.viewmodel.model.LoginAction
 import com.asc.mydoctorapp.ui.login.viewmodel.model.LoginEvent
 import com.asc.mydoctorapp.ui.login.viewmodel.model.LoginUIState
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class LoginViewModel @Inject constructor(
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val loginUserUseCase: LoginUserUseCase
 ): BaseSharedViewModel<LoginUIState, LoginAction, LoginEvent>(
     initialState = LoginUIState()
 ) {
@@ -113,12 +116,29 @@ class LoginViewModel @Inject constructor(
             )
         }
 
-        // Normally we would perform authentication here
-        // For now, we'll just simulate a successful login
-        // In a real app, this would be an async call to an auth service
-        
-        // Simulate successful login after validation
-        sendViewAction(action = LoginAction.NavigateToHome)
+        // Perform real authentication using the domain layer
+        viewModelScope.launch {
+            try {
+                val userToken = loginUserUseCase(login, password)
+                
+                // Save token to preferences
+                preferencesManager.userToken = userToken.value
+                
+                updateViewState { state ->
+                    state.copy(isLoading = false)
+                }
+                
+                // Navigate to home screen on successful login
+                sendViewAction(action = LoginAction.NavigateToHome)
+            } catch (e: Exception) {
+                updateViewState { state ->
+                    state.copy(isLoading = false)
+                }
+                sendViewAction(action = LoginAction.ShowError(
+                    e.message ?: "Ошибка авторизации"
+                ))
+            }
+        }
     }
 
     private fun isValidLogin(login: String): Boolean {

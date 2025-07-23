@@ -69,8 +69,14 @@ fun ChatScreen(
             .padding(bottom = 0.dp)
     ) {
         if (state?.messages?.isEmpty() == true) {
-            WelcomeChatComponent (
-                onStartClick = { viewModel.obtainEvent(ChatEvent.OnSendClick) }
+            // Показываем приветственный экран при пустой истории
+            WelcomeChatComponent(
+                // Перенаправляем пользователя к интерфейсу чата без отправки сообщения
+                onStartClick = { 
+                    // Добавляем пустое AI-сообщение с приветствием, чтобы инициализировать UI чата
+                    viewModel.obtainEvent(ChatEvent.OnInputChanged("Здравствуйте! Расскажите о ваших симптомах"))
+                    viewModel.obtainEvent(ChatEvent.OnSendClick)
+                }
             )
         } else {
             ChatHistoryScreen(
@@ -124,17 +130,23 @@ private fun ChatHistoryScreen(
                     .padding(horizontal = 24.dp)
             ) {
                 Box(modifier = Modifier.weight(1f)) {
+                    // Используем LazyColumn с reverseLayout = false для правильного отображения
+                    // сообщений в хронологическом порядке (новые внизу)
+                    val listState = rememberLazyListState()
+                    
                     LazyColumn(
-                        state = rememberLazyListState(),
+                        state = listState,
                         reverseLayout = false,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(messages.reversed()) { message ->
+                        items(messages) { message ->
                             ChatMessageBubble(
                                 message = message,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
                         }
+                        
+                        // Добавляем кнопку записи к врачу после нескольких ответов AI
                         if (aiReplyCount >= 3) {
                             item {
                                 Spacer(modifier = Modifier.height(16.dp))
@@ -162,6 +174,13 @@ private fun ChatHistoryScreen(
                                     )
                                 }
                             }
+                        }
+                    }
+                    
+                    // Автоматическая прокрутка к последнему сообщению при появлении новых сообщений
+                    LaunchedEffect(messages.size) {
+                        if (messages.isNotEmpty()) {
+                            listState.animateScrollToItem(messages.size - 1)
                         }
                     }
                 }
