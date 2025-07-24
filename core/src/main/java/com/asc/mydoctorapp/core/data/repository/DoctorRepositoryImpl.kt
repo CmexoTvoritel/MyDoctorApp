@@ -66,19 +66,20 @@ class DoctorRepositoryImpl @Inject constructor(
             ?: throw AppException("Doctor with email $email not found")
     }
 
-    override suspend fun bookAppointment(request: AppointmentRequest) {
+    override suspend fun bookAppointment(request: AppointmentRequest): Boolean {
         try {
             val token = preferencesManager.userToken
                 ?: throw AppException("Unauthorized. Please login first.")
             
             val requestBody = formRequestBodyForAppointment(request, token)
             val response = apiService.book(requestBody)
-            
-            if (!response.isSuccessful) {
+            if (response.isSuccessful) {
+                return true
+            } else {
                 throw AppException("Failed to book appointment: ${response.errorBody()?.string()}")
             }
         } catch (e: Exception) {
-            throw AppException("Failed to book appointment: ${e.message}")
+            return false
         }
     }
     
@@ -97,12 +98,14 @@ class DoctorRepositoryImpl @Inject constructor(
         request: AppointmentRequest,
         token: String
     ): RequestBody {
-        val dateTimeFormat = DateTimeFormatter.ISO_LOCAL_DATE_TIME
-        
         val parameters = JSONObject().apply {
             put("token", token)
             put("doctor_email", request.doctorEmail)
-            put("date_time", request.dateTime.format(dateTimeFormat))
+            put("day", request.day)
+            put("month", request.month)
+            put("year", request.year)
+            put("hour", request.hour)
+            put("minutes", request.minutes)
         }.toString()
         return parameters.toRequestBody(mediaTypeJson.toMediaTypeOrNull())
     }

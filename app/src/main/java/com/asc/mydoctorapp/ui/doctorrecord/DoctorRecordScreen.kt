@@ -34,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -63,11 +64,16 @@ import java.util.Locale
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DoctorRecordScreen(
+    doctorEmail: String,
     onNavigateBack: () -> Unit = {},
     onNavigateToConfirmation: (LocalDate, LocalTime) -> Unit = { _, _ -> }
 ) {
     val viewModel: DoctorRecordViewModel = hiltViewModel()
     val state by viewModel.viewStates().collectAsState()
+
+    LaunchedEffect(doctorEmail) {
+        viewModel.obtainEvent(viewEvent = DoctorRecordEvent.LoadDoctor(doctorEmail))
+    }
     
     viewModel.viewActions().collectAsState(initial = null).value?.let { action ->
         when (action) {
@@ -115,7 +121,7 @@ fun DoctorRecordScreen(
             // Календарь
             CalendarView(
                 yearMonth = state?.displayedMonth ?: YearMonth.now(),
-                selectedDate = state?.selectedDate ?: LocalDate.now(),
+                selectedDate = state?.selectedDate,
                 availableDates = state?.availableDates ?: emptySet(),
                 accentColor = accentColor,
                 onPrevMonth = { viewModel.obtainEvent(DoctorRecordEvent.OnPrevMonth) },
@@ -125,12 +131,11 @@ fun DoctorRecordScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
 
-            val timeSlots = state?.availableTimeSlots
+            val timeSlots = state?.availableTimeSlots ?: emptyList()
             val selectedTime = state?.selectedTime
             // Выбор времени (только если дата выбрана)
             state?.selectedDate?.let { selectedDate ->
-                val timeSlot = timeSlots?.get(selectedDate) ?: emptyList()
-                if (timeSlot.isNotEmpty()) {
+                if (timeSlots.isNotEmpty()) {
                     Text(
                         text = "Выберите время",
                         style = MaterialTheme.typography.titleMedium.copy(
@@ -142,10 +147,10 @@ fun DoctorRecordScreen(
                     
                     FlowRow(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        timeSlot.forEach { time ->
+                        timeSlots.forEach { time ->
                             val isSelected = selectedTime == time
                             TimeSlotItem(
                                 time = time,

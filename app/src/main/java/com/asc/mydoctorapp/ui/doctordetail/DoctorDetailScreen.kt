@@ -78,7 +78,10 @@ fun DoctorDetailScreen(
     viewModel.viewActions().collectAsState(initial = null).value?.let { action ->
         when (action) {
             is DoctorDetailAction.NavigateBack -> onNavigateBack()
-            is DoctorDetailAction.NavigateToBooking -> onNavigateToScreen(AppRoutes.DoctorRecord.route)
+            is DoctorDetailAction.NavigateToBooking -> {
+                val route = AppRoutes.DoctorRecord.route.replace("{doctorEmail}", action.doctorEmail)
+                onNavigateToScreen(route)
+            }
             is DoctorDetailAction.NavigateToSupport -> {}
             is DoctorDetailAction.NavigateToReviewDetail -> onNavigateToScreen("home/reviewsList/false")
         }

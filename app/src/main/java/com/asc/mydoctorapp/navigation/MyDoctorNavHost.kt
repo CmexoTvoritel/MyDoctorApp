@@ -67,7 +67,7 @@ enum class AppRoutes(val route: String) {
     DoctorList("home/doctorList"),
     DoctorDetails("home/doctorDetails/{doctorEmail}"),
     ReviewsList("home/reviewsList/{isMyReviews}"),
-    DoctorRecord("home/doctorRecord"),
+    DoctorRecord("home/doctorRecord/{doctorEmail}"),
     FinishRecord("home/DoctorRecord"),
     Chat("chat"),
     ChatDetails("chat/details"),
@@ -201,6 +201,35 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
             )
         }
         composable(
+            route = AppRoutes.DoctorRecord.route,
+            arguments = listOf(
+                navArgument("doctorEmail") {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val doctorEmail = backStackEntry.arguments?.getString("doctorEmail") ?: ""
+            DoctorRecordScreen(
+                doctorEmail = doctorEmail,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToConfirmation = { date, time ->
+                    navController.navigate(AppRoutes.FinishRecord.route)
+                }
+            )
+        }
+        composable(route = AppRoutes.FinishRecord.route) {
+            FinishRecordScreen(
+                date = LocalDate.now(),
+                time = LocalTime.now(),
+                onNavigateToMain = {
+                    navController.navigate(AppRoutes.Home.route)
+                }
+            )
+        }
+        composable(
             route = AppRoutes.ReviewsList.route,
             arguments = listOf(
                 navArgument("isMyReviews") {
@@ -217,25 +246,6 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
                 },
                 onNavigateToEditReview = { reviewId ->
                     // В будущем здесь может быть навигация к экрану редактирования отзыва
-                }
-            )
-        }
-        composable(route = AppRoutes.DoctorRecord.route) {
-            DoctorRecordScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToConfirmation = { date, time ->
-                    navController.navigate(AppRoutes.FinishRecord.route)
-                }
-            )
-        }
-        composable(route = AppRoutes.FinishRecord.route) {
-            FinishRecordScreen(
-                date = LocalDate.now(),
-                time = LocalTime.now(),
-                onNavigateToMain = {
-                    navController.navigate(AppRoutes.Home.route)
                 }
             )
         }

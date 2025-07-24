@@ -1,8 +1,7 @@
 package com.asc.mydoctorapp.ui.doctordetail.viewmodel
 
-import androidx.lifecycle.viewModelScope
 import com.asc.mydoctorapp.R
-import com.asc.mydoctorapp.core.domain.repository.DoctorRepository
+import com.asc.mydoctorapp.core.data.remote.WorkingDays
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorByEmailUseCase
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.ClinicInfo
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.DoctorDetailAction
@@ -23,13 +22,38 @@ class DoctorDetailViewModel @Inject constructor(
         isLoading = true
     )
 ) {
+    private val dayRu = mapOf(
+        "Monday" to "пн",
+        "Tuesday" to "вт",
+        "Wednesday" to "ср",
+        "Thursday" to "чт",
+        "Friday" to "пт",
+        "Suturday" to "сб",
+        "Sunday" to "вс"
+    )
+
+    private fun WorkingDays.toRuString(): String {
+        val parts = buildList {
+            monday?.let { add("${dayRu["Monday"]}: $it") }
+            tuesday?.let { add("${dayRu["Tuesday"]}: $it") }
+            wednesday?.let { add("${dayRu["Wednesday"]}: $it") }
+            thursday?.let { add("${dayRu["Thursday"]}: $it") }
+            friday?.let { add("${dayRu["Friday"]}: $it") }
+            saturday?.let { add("${dayRu["Suturday"]}: $it") }
+            sunday?.let { add("${dayRu["Sunday"]}: $it") }
+        }
+        return parts.joinToString(separator = ", ")
+    }
+
     override fun obtainEvent(viewEvent: DoctorDetailEvent) {
         when (viewEvent) {
             is DoctorDetailEvent.OnBackClick -> {
                 sendViewAction(action = DoctorDetailAction.NavigateBack)
             }
             is DoctorDetailEvent.OnBookClick -> {
-                sendViewAction(DoctorDetailAction.NavigateToBooking(viewStates().value?.doctor?.id ?: ""))
+                sendViewAction(DoctorDetailAction.NavigateToBooking(
+                    doctorEmail = viewStates().value?.doctor?.id ?: ""
+                ))
             }
             is DoctorDetailEvent.OnSupportClick -> {
                 sendViewAction(DoctorDetailAction.NavigateToSupport)
@@ -91,7 +115,7 @@ class DoctorDetailViewModel @Inject constructor(
                 val clinicInfo = ClinicInfo(
                     name = doctor.clinic,
                     address = "ул. Лесная, 5, Москва",
-                    schedule = "Пн-Пт: 9:00-18:00"
+                    schedule = doctor.workingDays?.toRuString() ?: ""
                 )
                 
                 updateViewState { 

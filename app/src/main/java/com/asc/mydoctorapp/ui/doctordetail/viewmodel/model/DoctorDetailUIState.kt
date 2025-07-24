@@ -43,7 +43,7 @@ sealed interface DoctorDetailEvent {
 
 sealed interface DoctorDetailAction {
     data object NavigateBack : DoctorDetailAction
-    data class NavigateToBooking(val doctorId: String) : DoctorDetailAction
+    data class NavigateToBooking(val doctorEmail: String) : DoctorDetailAction
     data object NavigateToSupport : DoctorDetailAction
     data class NavigateToReviewDetail(val reviewId: String) : DoctorDetailAction
 }

@@ -1,34 +1,47 @@
 package com.asc.mydoctorapp.ui.doctorrecord.viewmodel
 
+import android.util.Log
+import com.asc.mydoctorapp.core.data.remote.WorkingDays
+import com.asc.mydoctorapp.core.domain.model.AppointmentRequest
+import com.asc.mydoctorapp.core.domain.model.Doctor
+import com.asc.mydoctorapp.core.domain.model.UserToken
+import com.asc.mydoctorapp.core.domain.usecase.BookAppointmentUseCase
+import com.asc.mydoctorapp.core.domain.usecase.GetDoctorByEmailUseCase
+import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordAction
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordEvent
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordUIState
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 
 @HiltViewModel
 class DoctorRecordViewModel @Inject constructor(
-
+    private val preferencesManager: PreferencesManager,
+    private val getDoctorByEmailUseCase: GetDoctorByEmailUseCase,
+    private val bookAppointmentUseCase: BookAppointmentUseCase
 ) : BaseSharedViewModel<DoctorRecordUIState, DoctorRecordAction, DoctorRecordEvent>(
     initialState = DoctorRecordUIState(
         displayedMonth = YearMonth.now(),
-        availableDates = emptySet(),
-        availableTimeSlots = emptyMap()
+        availableDates = emptySet()
     )
 ) {
+    private var doctorInfo: Doctor? = null
 
-    init {
-        updateViewState { state ->
-            state.copy(
-                displayedMonth = YearMonth.now(),
-                availableDates = generateAvailableDates(),
-                availableTimeSlots = generateTimeSlots()
-            )
-        }
+    private fun parseTimeRange(range: String): List<LocalTime> {
+        val (startStr, endStr) = range.split('-')
+        val formatter = DateTimeFormatter.ofPattern("H:mm")
+        val start = LocalTime.parse(startStr.trim(), formatter)
+        val end   = LocalTime.parse(endStr.trim(), formatter)
+        return generateSequence(start) { it.plusHours(1) }
+            .takeWhile { it < end }       // последняя не включается, как в примере
+            .toList()
     }
 
     override fun obtainEvent(viewEvent: DoctorRecordEvent) {
@@ -38,97 +51,129 @@ class DoctorRecordViewModel @Inject constructor(
             is DoctorRecordEvent.OnNextMonth -> updateMonth(true)
             is DoctorRecordEvent.OnDateSelected -> selectDate(viewEvent.date)
             is DoctorRecordEvent.OnTimeSelected -> selectTime(viewEvent.time)
-            is DoctorRecordEvent.OnContinueClick -> {
-                if (viewStates().value?.canContinue == true) {
-                    val date = viewStates().value?.selectedDate!!
-                    val time = viewStates().value?.selectedTime!!
-                    sendViewAction(DoctorRecordAction.NavigateToConfirmation(date, time))
+            is DoctorRecordEvent.OnContinueClick -> continueClicked()
+            is DoctorRecordEvent.LoadDoctor -> loadDoctorInfo(viewEvent.email)
+        }
+    }
+
+    private fun loadDoctorInfo(email: String) {
+        viewModelScope.launch {
+            try {
+                val doctor = getDoctorByEmailUseCase(email)
+                doctorInfo = doctor
+                updateViewState { s ->
+                    val month = YearMonth.now()
+                    val newDates = generateAvailableDates(month, doctor.workingDays)
+                    s.copy(
+                        workingDays = doctor.workingDays,
+                        displayedMonth = month,
+                        availableDates = newDates,
+                        availableTimeSlots = emptyList(),
+                        selectedDate = null,
+                        selectedTime = null,
+                        canContinue = false
+                    )
                 }
+            } catch (e: Exception) {
+                Log.e("DoctorRecordViewModel", "Error loading doctor info", e)
             }
         }
     }
 
     private fun updateMonth(isNext: Boolean) {
-        val currentMonth = viewStates().value?.displayedMonth
-        val newMonth = if (isNext) {
-            currentMonth?.plusMonths(1)
-        } else {
-            currentMonth?.minusMonths(1)
-        }
-        if (newMonth != null) {
-            updateViewState { state ->
-                state.copy(
-                    displayedMonth = newMonth,
-                    availableDates = generateAvailableDates(newMonth)
-                )
-            }
-        }
-    }
+        val state = viewStates().value ?: return
+        val newMonth = (state.displayedMonth).let { if (isNext) it.plusMonths(1) else it.minusMonths(1) }
 
-    private fun selectDate(date: LocalDate) {
-        if (date in (viewStates().value?.availableDates ?: emptySet())) {
-            updateViewState { state ->
-                state.copy(
-                    selectedDate = date,
-                    selectedTime = null,
-                    canContinue = false
-                )
-            }
-        }
-    }
-
-    private fun selectTime(time: LocalTime) {
-        updateViewState { state ->
-            val canContinue = state.selectedDate != null
-            state.copy(
-                selectedTime = time,
-                canContinue = canContinue
+        updateViewState {
+            it.copy(
+                displayedMonth = newMonth,
+                availableDates = generateAvailableDates(newMonth, it.workingDays),
+                // сбрасываем выбор при смене месяца
+                selectedDate = null,
+                selectedTime = null,
+                availableTimeSlots = emptyList(),
+                canContinue = false
             )
         }
     }
 
-    private fun generateAvailableDates(yearMonth: YearMonth = YearMonth.now()): Set<LocalDate> {
-        val result = mutableSetOf<LocalDate>()
-        val today = LocalDate.now()
-        
-        // Проверяем, содержится ли сегодняшний день в указанном месяце
-        val isTodayInMonth = today.year == yearMonth.year && today.monthValue == yearMonth.monthValue
-        
-        // Определяем начальный день для генерации дат
-        val startDay = if (isTodayInMonth) {
-            today.dayOfMonth
-        } else if (yearMonth.isAfter(YearMonth.from(today))) {
-            // Если месяц в будущем, добавляем все дни
-            1
-        } else {
-            // Если месяц в прошлом, не добавляем ни одного дня
-            yearMonth.lengthOfMonth() + 1 // Это условие никогда не выполнится
+    private fun selectDate(date: LocalDate) {
+        val state = viewStates().value ?: return
+        if (date !in state.availableDates) return
+
+        val slots = buildList {
+            val wd = state.workingDays ?: return@buildList
+            val rangeStr = when (date.dayOfWeek) {
+                DayOfWeek.MONDAY    -> wd.monday
+                DayOfWeek.TUESDAY   -> wd.tuesday
+                DayOfWeek.WEDNESDAY -> wd.wednesday
+                DayOfWeek.THURSDAY  -> wd.thursday
+                DayOfWeek.FRIDAY    -> wd.friday
+                DayOfWeek.SATURDAY  -> wd.saturday
+                DayOfWeek.SUNDAY    -> wd.sunday
+            }
+            if (rangeStr != null) addAll(parseTimeRange(rangeStr))
         }
-        
-        // Добавляем все дни начиная с startDay
-        for (day in startDay..yearMonth.lengthOfMonth()) {
-            result.add(yearMonth.atDay(day))
+
+        updateViewState {
+            it.copy(
+                selectedDate = date,
+                selectedTime = null,
+                availableTimeSlots = slots,
+                canContinue = false
+            )
         }
-        
-        return result
     }
 
-    private fun generateTimeSlots(): Map<LocalDate, List<LocalTime>> {
-        val result = mutableMapOf<LocalDate, List<LocalTime>>()
-        val availableTimes = listOf(
-            LocalTime.of(9, 0),
-            LocalTime.of(10, 0),
-            LocalTime.of(11, 0),
-            LocalTime.of(12, 30),
-            LocalTime.of(15, 0),
-            LocalTime.of(17, 0)
-        )
-        
-        // Генерируем одинаковые временные слоты для всех доступных дат
-        for (date in generateAvailableDates()) {
-            result[date] = availableTimes
+    private fun selectTime(time: LocalTime) {
+        updateViewState { s ->
+            val ok = s.selectedDate != null && time in s.availableTimeSlots
+            s.copy(selectedTime = time, canContinue = ok)
         }
-        
-        return result
+    }
+
+    private fun continueClicked() {
+        viewModelScope.launch {
+            if (viewStates().value?.canContinue == true) {
+                val date = viewStates().value?.selectedDate!!
+                val time = viewStates().value?.selectedTime!!
+                try {
+                    val answer = bookAppointmentUseCase.invoke(request = AppointmentRequest(
+                        doctorEmail = doctorInfo?.email ?: "",
+                        token = UserToken(value = preferencesManager.userToken ?: ""),
+                        day = date.dayOfMonth.toString(),
+                        month = date.monthValue.toString(),
+                        year = date.year.toString().substring(2),
+                        hour = time.hour.toString(),
+                        minutes = time.minute.toString()
+                    ))
+                    if (answer) {
+                        sendViewAction(DoctorRecordAction.NavigateToConfirmation(date, time))
+                    }
+                } catch (e: Exception) {
+                    Log.e("DoctorRecordViewModel", "Error creating record", e)
+                }
+            }
+        }
+    }
+
+    private fun generateAvailableDates(month: YearMonth, wd: WorkingDays?): Set<LocalDate> {
+        if (wd == null) return emptySet()
+
+        val allowedDays = buildSet {
+            if (wd.monday    != null) add(DayOfWeek.MONDAY)
+            if (wd.tuesday   != null) add(DayOfWeek.TUESDAY)
+            if (wd.wednesday != null) add(DayOfWeek.WEDNESDAY)
+            if (wd.thursday  != null) add(DayOfWeek.THURSDAY)
+            if (wd.friday    != null) add(DayOfWeek.FRIDAY)
+            if (wd.saturday  != null) add(DayOfWeek.SATURDAY)
+            if (wd.sunday    != null) add(DayOfWeek.SUNDAY)
+        }
+
+        val today = LocalDate.now()
+        return (1..month.lengthOfMonth())
+            .map { month.atDay(it) }
+            .filter { it.dayOfWeek in allowedDays && !it.isBefore(today) }
+            .toSet()
     }
 }
