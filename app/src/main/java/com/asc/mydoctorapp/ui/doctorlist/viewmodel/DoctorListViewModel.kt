@@ -1,5 +1,6 @@
 package com.asc.mydoctorapp.ui.doctorlist.viewmodel
 
+import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorsUseCase
 import com.asc.mydoctorapp.ui.doctorlist.model.DoctorUIItem
 import com.asc.mydoctorapp.ui.doctorlist.viewmodel.model.DoctorAction
@@ -30,7 +31,7 @@ class DoctorListViewModel @Inject constructor(
                         surname = doctor.surname,
                         specialty = doctor.specialty,
                         rating = 5.0f,
-                        photoRes = null,
+                        photoRes = R.drawable.ic_doctor_placeholder,
                         isFavorite = false
                     )
                 }
@@ -45,15 +46,17 @@ class DoctorListViewModel @Inject constructor(
         }
     }
     
-    private fun navigateToDoctorDetails() {
-        sendViewAction(DoctorAction.NavigateToDoctorDetails)
+    private fun navigateToDoctorDetails(doctorEmail: String) {
+        sendViewAction(DoctorAction.NavigateToDoctorDetails(doctorEmail))
     }
 
     override fun obtainEvent(viewEvent: DoctorEvent) {
         when (viewEvent) {
-            DoctorEvent.OnBackClick -> {}
+            DoctorEvent.OnBackClick -> {
+                sendViewAction(DoctorAction.NavigateBack)
+            }
             is DoctorEvent.OnDoctorClick -> {
-                navigateToDoctorDetails()
+                navigateToDoctorDetails(viewEvent.doctorId)
             }
             is DoctorEvent.OnFavoriteToggle -> {
                 val updatedDoctors = viewStates().value?.doctorList?.map {

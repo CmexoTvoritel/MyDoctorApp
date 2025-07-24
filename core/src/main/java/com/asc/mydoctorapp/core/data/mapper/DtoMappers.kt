@@ -20,6 +20,7 @@ fun DoctorDto.toDomain(): Doctor {
         specialty = speciality ?: "Врач",
         email = email ?: "",
         clinic = "Clinic1",
+        workingDays = workingDays
     )
 }
 

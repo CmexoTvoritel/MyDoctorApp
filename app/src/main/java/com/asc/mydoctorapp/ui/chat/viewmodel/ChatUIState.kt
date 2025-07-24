@@ -2,7 +2,13 @@ package com.asc.mydoctorapp.ui.chat.viewmodel
 
 import java.util.UUID
 
+enum class ScreenState {
+    WELCOME,
+    CHAT
+}
+
 data class ChatUIState(
+    val screenState: ScreenState = ScreenState.WELCOME,
     val messages: List<ChatMessage> = emptyList(),  // история
     val inputText: String = "",
     val aiReplyCount: Int = 0                       // сколько ответов ИИ отправлено
@@ -18,6 +24,7 @@ data class ChatMessage(
 enum class Author { USER, AI }
 
 sealed interface ChatEvent {
+    data object OnStartClick : ChatEvent
     data class OnInputChanged(val text: String) : ChatEvent      // ввод в TextField
     object OnSendClick : ChatEvent                               // тап по «отправить»
     object OnAttachClick : ChatEvent                             // плюсик слева

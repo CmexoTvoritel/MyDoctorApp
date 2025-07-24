@@ -5,7 +5,8 @@ data class DoctorDetailUIState(
     val education: List<String> = emptyList(),
     val tags: List<String> = emptyList(),
     val reviews: List<ReviewUi> = emptyList(),
-    val clinicInfo: ClinicInfo = ClinicInfo()
+    val clinicInfo: ClinicInfo = ClinicInfo(),
+    val isLoading: Boolean = false
 )
 
 data class DoctorDetailUi(
@@ -37,6 +38,7 @@ sealed interface DoctorDetailEvent {
     data object OnBookClick : DoctorDetailEvent
     data object OnSupportClick : DoctorDetailEvent
     data class OnReviewClick(val id: String) : DoctorDetailEvent
+    data class LoadDoctor(val email: String) : DoctorDetailEvent
 }
 
 sealed interface DoctorDetailAction {

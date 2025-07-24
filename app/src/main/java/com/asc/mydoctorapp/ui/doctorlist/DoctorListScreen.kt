@@ -39,7 +39,12 @@ fun DoctorListScreen(
         viewModel.viewActions().collect { action ->
             when (action) {
                 is DoctorAction.NavigateToDoctorDetails -> {
-                    onNavigateToScreen(AppRoutes.DoctorDetails.route)
+                    // Формируем маршрут с email доктора
+                    val route = AppRoutes.DoctorDetails.route.replace("{doctorEmail}", action.doctorEmail)
+                    onNavigateToScreen(route)
+                }
+                is DoctorAction.NavigateBack -> {
+                    onNavigateBack()
                 }
                 else -> {}
             }

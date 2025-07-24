@@ -43,6 +43,7 @@ import com.asc.mydoctorapp.ui.chat.components.WelcomeChatComponent
 import com.asc.mydoctorapp.ui.chat.viewmodel.ChatAction
 import com.asc.mydoctorapp.ui.chat.viewmodel.ChatEvent
 import com.asc.mydoctorapp.ui.chat.viewmodel.ChatViewModel
+import com.asc.mydoctorapp.ui.chat.viewmodel.ScreenState
 
 val TealColor = Color(0xFF43B3AE)
 
@@ -68,26 +69,26 @@ fun ChatScreen(
             .background(color = Color.White)
             .padding(bottom = 0.dp)
     ) {
-        if (state?.messages?.isEmpty() == true) {
-            // Показываем приветственный экран при пустой истории
-            WelcomeChatComponent(
-                // Перенаправляем пользователя к интерфейсу чата без отправки сообщения
-                onStartClick = { 
-                    // Добавляем пустое AI-сообщение с приветствием, чтобы инициализировать UI чата
-                    viewModel.obtainEvent(ChatEvent.OnInputChanged("Здравствуйте! Расскажите о ваших симптомах"))
-                    viewModel.obtainEvent(ChatEvent.OnSendClick)
-                }
-            )
-        } else {
-            ChatHistoryScreen(
-                messages = state?.messages ?: emptyList(),
-                aiReplyCount = state?.aiReplyCount ?: 0,
-                onBookDoctorClick = { viewModel.obtainEvent(ChatEvent.OnBookDoctorClick) },
-                inputText = state?.inputText ?: "",
-                onInputChanged = { viewModel.obtainEvent(ChatEvent.OnInputChanged(it)) },
-                onSendClick = { viewModel.obtainEvent(ChatEvent.OnSendClick) },
-                onAttachClick = { viewModel.obtainEvent(ChatEvent.OnAttachClick) }
-            )
+        when (state?.screenState) {
+            ScreenState.WELCOME -> {
+                WelcomeChatComponent(
+                    onStartClick = {
+                        viewModel.obtainEvent(ChatEvent.OnStartClick)
+                    }
+                )
+            }
+            ScreenState.CHAT -> {
+                ChatHistoryScreen(
+                    messages = state?.messages ?: emptyList(),
+                    aiReplyCount = state?.aiReplyCount ?: 0,
+                    onBookDoctorClick = { viewModel.obtainEvent(ChatEvent.OnBookDoctorClick) },
+                    inputText = state?.inputText ?: "",
+                    onInputChanged = { viewModel.obtainEvent(ChatEvent.OnInputChanged(it)) },
+                    onSendClick = { viewModel.obtainEvent(ChatEvent.OnSendClick) },
+                    onAttachClick = { viewModel.obtainEvent(ChatEvent.OnAttachClick) }
+                )
+            }
+            else -> {}
         }
     }
 }
@@ -139,7 +140,7 @@ private fun ChatHistoryScreen(
                         reverseLayout = false,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        items(messages) { message ->
+                        items(messages.reversed()) { message ->
                             ChatMessageBubble(
                                 message = message,
                                 modifier = Modifier.padding(vertical = 8.dp)

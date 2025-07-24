@@ -7,7 +7,8 @@ data class DoctorUIState (
 )
 
 sealed interface DoctorAction {
-    data object NavigateToDoctorDetails: DoctorAction
+    data class NavigateToDoctorDetails(val doctorEmail: String): DoctorAction
+    data object NavigateBack: DoctorAction
 }
 
 sealed interface DoctorEvent {

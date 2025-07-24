@@ -64,7 +64,11 @@ fun HomeScreen(
         viewModel.viewActions().collect { action ->
             when (action) {
                 is HomeAction.NavigateToChat -> navigateTo(action.route)
-                is HomeAction.NavigateToDoctorProfile -> navigateTo(AppRoutes.DoctorDetails.route)
+                is HomeAction.NavigateToDoctorProfile -> {
+                    // Формируем маршрут с email доктора
+                    val route = AppRoutes.DoctorDetails.route.replace("{doctorEmail}", action.doctorEmail)
+                    navigateTo(route)
+                }
                 is HomeAction.NavigateToSpecialistsList -> navigateTo(action.route)
                 is HomeAction.NavigateToFaq -> navigateTo(action.route)
                 else -> {}

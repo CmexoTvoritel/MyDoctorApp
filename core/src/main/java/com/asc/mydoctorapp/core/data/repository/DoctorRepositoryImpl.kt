@@ -5,6 +5,7 @@ import com.asc.mydoctorapp.core.domain.model.AppointmentRequest
 import com.asc.mydoctorapp.core.domain.model.Doctor
 import com.asc.mydoctorapp.core.domain.repository.DoctorRepository
 import com.asc.mydoctorapp.core.data.remote.ApiService
+import com.asc.mydoctorapp.core.data.remote.DoctorDto
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -19,8 +20,17 @@ class DoctorRepositoryImpl @Inject constructor(
 ) : DoctorRepository {
 
     private val mediaTypeJson = "application/json"
+    
+    // Кэш докторов
+    private var doctorCache: List<DoctorDto> = emptyList()
 
     override suspend fun getDoctors(clinicName: String): List<Doctor> {
+        // Если кэш не пустой, возвращаем его
+        if (doctorCache.isNotEmpty()) {
+            return doctorCache.map { it.toDomain() }
+        }
+        
+        // Иначе загружаем с сервера
         return try {
             val token = preferencesManager.userToken
                 ?: throw AppException("Unauthorized. Please login first.")
@@ -29,13 +39,31 @@ class DoctorRepositoryImpl @Inject constructor(
             val response = apiService.doctors(requestBody)
             
             if (response.isSuccessful) {
-                response.body()?.map { it.toDomain() } ?: emptyList()
+                val doctorsInitial = response.body()
+                doctorCache = doctorsInitial ?: emptyList()
+                val doctors = doctorsInitial?.map { it.toDomain() } ?: emptyList()
+                doctors
             } else {
                 throw AppException("Failed to get doctors: ${response.errorBody()?.string()}")
             }
         } catch (e: Exception) {
             throw AppException("Failed to get doctors: ${e.message}")
         }
+    }
+    
+    override suspend fun getDoctorByEmail(email: String): Doctor {
+        // Проверяем, есть ли доктор в кэше
+        val cachedDoctor = doctorCache.find { it.email == email }
+        if (cachedDoctor != null) {
+            return cachedDoctor.toDomain()
+        }
+        
+        // Если кэш пуст или доктора нет в кэше, загружаем список докторов с сервера
+        val doctors = getDoctors("Clinic1")
+        
+        // Ищем доктора в обновленном кэше
+        return doctors.find { it.email == email }
+            ?: throw AppException("Doctor with email $email not found")
     }
 
     override suspend fun bookAppointment(request: AppointmentRequest) {

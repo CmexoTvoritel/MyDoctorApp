@@ -1,6 +1,9 @@
 package com.asc.mydoctorapp.ui.doctordetail.viewmodel
 
+import androidx.lifecycle.viewModelScope
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.core.domain.repository.DoctorRepository
+import com.asc.mydoctorapp.core.domain.usecase.GetDoctorByEmailUseCase
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.ClinicInfo
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.DoctorDetailAction
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.DoctorDetailEvent
@@ -9,18 +12,15 @@ import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.DoctorDetailUi
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.ReviewUi
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class DoctorDetailViewModel @Inject constructor(
-
+    private val getDoctorByEmailUseCase: GetDoctorByEmailUseCase
 ) : BaseSharedViewModel<DoctorDetailUIState, DoctorDetailAction, DoctorDetailEvent>(
     initialState = DoctorDetailUIState(
-        doctor = mockDoctor,
-        education = mockEducation,
-        tags = mockTags,
-        reviews = mockReviews,
-        clinicInfo = mockClinicInfo
+        isLoading = true
     )
 ) {
     override fun obtainEvent(viewEvent: DoctorDetailEvent) {
@@ -37,60 +37,79 @@ class DoctorDetailViewModel @Inject constructor(
             is DoctorDetailEvent.OnReviewClick -> {
                 sendViewAction(DoctorDetailAction.NavigateToReviewDetail(viewEvent.id))
             }
+            is DoctorDetailEvent.LoadDoctor -> {
+                loadDoctorByEmail(viewEvent.email)
+            }
+        }
+    }
+
+    private fun loadDoctorByEmail(email: String) {
+        updateViewState { it.copy(isLoading = true) }
+        
+        viewModelScope.launch {
+            try {
+                val doctor = getDoctorByEmailUseCase(email)
+                
+                // Конвертируем модель Doctor из домена в UI-модель
+                val doctorDetailUi = DoctorDetailUi(
+                    id = doctor.email,
+                    name = "${doctor.name} ${doctor.surname}",
+                    rating = 5.0f,  // Можно будет расширить модель Doctor, чтобы включать рейтинг
+                    specialty = doctor.specialty,
+                    qualification = "Врач высшей категории", // Это поле можно будет добавить в модель Doctor
+                    photoRes = R.drawable.ic_doctor_placeholder,
+                    isFavorite = false
+                )
+                
+                // Примерные данные для демонстрации
+                val education = listOf(
+                    "Московский медицинский университет им. Сеченова, 2007-2013",
+                    "Кандидат медицинских наук, 2016"
+                )
+                
+                val tags = listOf(
+                    "Кардиология", "ЭКГ", "УЗИ сердца", "Холтер"
+                )
+                
+                val reviews = listOf(
+                    ReviewUi(
+                        id = "1",
+                        author = "Елена В.",
+                        rating = 5.0f,
+                        text = "Отличный врач, внимательный и профессиональный",
+                        avatarRes = R.drawable.ic_doctor_placeholder
+                    ),
+                    ReviewUi(
+                        id = "2",
+                        author = "Андрей К.",
+                        rating = 5.0f,
+                        text = "Очень доволен консультацией, всё объяснил и назначил эффективное лечение",
+                        avatarRes = R.drawable.ic_doctor_placeholder
+                    )
+                )
+                
+                val clinicInfo = ClinicInfo(
+                    name = doctor.clinic,
+                    address = "ул. Лесная, 5, Москва",
+                    schedule = "Пн-Пт: 9:00-18:00"
+                )
+                
+                updateViewState { 
+                    it.copy(
+                        doctor = doctorDetailUi,
+                        education = education,
+                        tags = tags,
+                        reviews = reviews,
+                        clinicInfo = clinicInfo,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                // Обработка ошибки
+                updateViewState { it.copy(isLoading = false) }
+            }
         }
     }
 }
 
-// Тестовые данные
-private val mockDoctor = DoctorDetailUi(
-    id = "1",
-    name = "Иван Сидоров",
-    rating = 5.0f,
-    specialty = "кардиолог",
-    qualification = "Врач высшей категории",
-    photoRes = R.drawable.ic_doctor_placeholder,
-    isFavorite = true
-)
-
-private val mockEducation = listOf(
-    "Ростовский государственный медицинский университет по специальности \"Лечебное дело\" 2015г.",
-    "Ростовский государственный медицинский университет, ординатура по специальности \"Терапия\" 2017г.",
-    "Ростовский государственный медицинский университет, профессиональная переподготовка по специальности \"Терапия\" 2018г."
-)
-
-private val mockTags = listOf(
-    "Кардиолог",
-    "Терапевт",
-    "Взрослый",
-    "Врач функциональной диагностики"
-)
-
-private val mockReviews = listOf(
-    ReviewUi(
-        id = "1",
-        author = "Лариса",
-        rating = 5.0f,
-        text = "Отличный врач! Ходим всей семьей!",
-        avatarRes = null
-    ),
-    ReviewUi(
-        id = "2",
-        author = "Александр",
-        rating = 5.0f,
-        text = "Очень внимательный специалист, подробно объясняет диагноз и лечение.",
-        avatarRes = null
-    ),
-    ReviewUi(
-        id = "3",
-        author = "Елена",
-        rating = 4.5f,
-        text = "Профессионал своего дела, но немного задержался на приеме.",
-        avatarRes = null
-    )
-)
-
-private val mockClinicInfo = ClinicInfo(
-    name = "Клиника \"Здоровье\"",
-    address = "Вавилова, 15",
-    schedule = "пн-пт 10:00-15:30"
-)
+// Тестовые данные удалены, так как теперь мы загружаем реальные данные

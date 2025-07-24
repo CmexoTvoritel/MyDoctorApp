@@ -65,7 +65,7 @@ enum class AppRoutes(val route: String) {
     Registration("registration"),
     Home("home"),
     DoctorList("home/doctorList"),
-    DoctorDetails("home/doctorDetails"),
+    DoctorDetails("home/doctorDetails/{doctorEmail}"),
     ReviewsList("home/reviewsList/{isMyReviews}"),
     DoctorRecord("home/doctorRecord"),
     FinishRecord("home/DoctorRecord"),
@@ -180,8 +180,18 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
                 }
             )
         }
-        composable(route = AppRoutes.DoctorDetails.route) {
+        composable(
+            route = AppRoutes.DoctorDetails.route,
+            arguments = listOf(
+                navArgument("doctorEmail") {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val doctorEmail = backStackEntry.arguments?.getString("doctorEmail") ?: ""
             DoctorDetailScreen(
+                doctorEmail = doctorEmail,
                 onNavigateToScreen = { route ->
                     navController.navigate(route)
                 },
@@ -232,7 +242,6 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
     }
 }
 
-// Graph для раздела Chat
 private fun NavGraphBuilder.chatNavigationGraph(navController: NavController) {
     navigation(
         startDestination = AppRoutes.Chat.route,

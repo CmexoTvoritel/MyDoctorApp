@@ -1,6 +1,5 @@
 package com.asc.mydoctorapp.ui.chat.viewmodel
 
-import androidx.lifecycle.viewModelScope
 import com.asc.mydoctorapp.core.domain.usecase.SendPromptUseCase
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -21,6 +20,7 @@ class ChatViewModel @Inject constructor(
             is ChatEvent.OnSendClick -> handleSendClick()
             is ChatEvent.OnAttachClick -> handleAttachClick()
             is ChatEvent.OnBookDoctorClick -> handleBookDoctorClick()
+            is ChatEvent.OnStartClick -> handleStartClick()
         }
     }
     
@@ -57,6 +57,12 @@ class ChatViewModel @Inject constructor(
     
     private fun handleBookDoctorClick() {
         sendViewAction(ChatAction.NavigateToBooking("booking"))
+    }
+
+    private fun handleStartClick() {
+        updateViewState { state ->
+            state.copy(screenState = ScreenState.CHAT)
+        }
     }
     
     private fun addMessage(author: Author, text: String) {

@@ -31,7 +31,7 @@ sealed interface HomeEvent {
 
 sealed interface HomeAction {
     data class NavigateToChat(val route: String) : HomeAction
-    data class NavigateToDoctorProfile(val doctorId: String) : HomeAction
+    data class NavigateToDoctorProfile(val doctorEmail: String) : HomeAction
     data class NavigateToSpecialistsList(val route: String) : HomeAction
     data class NavigateToFaq(val route: String) : HomeAction
 }
