@@ -1,5 +1,6 @@
 package com.asc.mydoctorapp.ui.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -30,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -48,6 +50,7 @@ private val TealColor = Color(0xFF43B3AE)
 fun ProfileScreen(
     navigateTo: (String) -> Unit = {},
 ) {
+    val context = LocalContext.current
     val viewModel: ProfileViewModel = hiltViewModel()
     val state by viewModel.viewStates().collectAsState()
     
@@ -55,13 +58,49 @@ fun ProfileScreen(
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.viewActions().collect { action ->
             when (action) {
-                is ProfileAction.NavigateToSettings -> {}
-                is ProfileAction.NavigateToFavorites -> {}
+                is ProfileAction.NavigateToSettings -> {
+                    Toast.makeText(
+                        context,
+                        "Not implemented yet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                is ProfileAction.NavigateToFavorites -> {
+                    Toast.makeText(
+                        context,
+                        "Not implemented yet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 is ProfileAction.NavigateToReviews -> navigateTo("home/reviewsList/true")
-                is ProfileAction.NavigateToMedicalBookView -> {}
-                is ProfileAction.NavigateToMedicalBookCreate -> {}
-                is ProfileAction.NavigateToSupportChat -> {}
-                is ProfileAction.NavigateToAvatarSelection -> {}
+                is ProfileAction.NavigateToMedicalBookView -> {
+                    Toast.makeText(
+                        context,
+                        "Not implemented yet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                is ProfileAction.NavigateToMedicalBookCreate -> {
+                    Toast.makeText(
+                        context,
+                        "Not implemented yet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                is ProfileAction.NavigateToSupportChat -> {
+                    Toast.makeText(
+                        context,
+                        "Not implemented yet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+                is ProfileAction.NavigateToAvatarSelection -> {
+                    Toast.makeText(
+                        context,
+                        "Not implemented yet",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
                 else -> {}
             }
         }
@@ -129,6 +168,7 @@ fun ProfileHeader(
             tint = Color.Unspecified,
             modifier = Modifier.size(36.dp)
                 .align(alignment = Alignment.TopEnd)
+                .clickable { onSettingsClick() }
         )
         // Аватар и имя пользователя
         Row(

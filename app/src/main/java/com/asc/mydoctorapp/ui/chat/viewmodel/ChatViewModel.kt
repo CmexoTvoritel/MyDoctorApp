@@ -107,20 +107,9 @@ class ChatViewModel @Inject constructor(
             try {
                 // Вызываем реальный API через UseCase
                 val response = sendPromptUseCase(prompt)
-                
-                // Удаляем индикатор загрузки
                 removeLoadingIndicator()
-                
-                // Получаем текст ответа
                 val responseText = response.text
-                
-                // Добавляем пустое сообщение AI, которое будем заполнять посимвольно
-                addMessage(Author.AI, "")
-                
-                // Симулируем печатание по одному символу
-                animateTypingResponse(responseText)
-                
-                // Увеличиваем счетчик ответов AI
+                addMessage(Author.AI, responseText)
                 updateViewState { state ->
                     state.copy(aiReplyCount = state.aiReplyCount + 1)
                 }
@@ -129,6 +118,33 @@ class ChatViewModel @Inject constructor(
                 removeLoadingIndicator()
                 addMessage(Author.AI, "Произошла ошибка: ${e.message ?: "неизвестная ошибка"}")
             }
+        }
+    }
+
+    private fun appendEmptyAiMessage(): Int {
+        var idx = 0
+        updateViewState { s ->
+            val list = listOf(ChatMessage(author = Author.AI, text = "")) + s.messages
+            idx = 0
+            s.copy(messages = list)
+        }
+        return idx
+    }
+
+    /** Постепенно «набиваем» текст: 20–50 мс между символами. */
+    private suspend fun typeWriterEffect(index: Int, full: String) {
+        for (i in 1..full.length) {
+            val part = full.substring(0, i)
+
+            updateViewState { s ->
+                val list = s.messages.toMutableList()
+                if (index < list.size && list[index].author == Author.AI) {
+                    list[index] = list[index].copy(text = part)
+                }
+                s.copy(messages = list)
+            }
+
+            delay(30)                       // скорость печати
         }
     }
     

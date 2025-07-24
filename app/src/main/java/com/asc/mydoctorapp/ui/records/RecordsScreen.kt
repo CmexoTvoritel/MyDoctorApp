@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -92,10 +91,13 @@ fun RecordsScreen(
                             }
                         )
                     }
-                    BottomButton(
-                        selectedTab = state?.selectedTab ?: RecordsTab.CURRENT,
-                        onPrimaryButtonClick = { viewModel.obtainEvent(RecordsEvent.OnPrimaryButtonClick) }
-                    )
+                    if ((state?.selectedTab == RecordsTab.CURRENT && state?.current?.isNotEmpty() == true) ||
+                        (state?.selectedTab == RecordsTab.PAST && state?.past?.isNotEmpty() == true)) {
+                        BottomButton(
+                            selectedTab = state?.selectedTab ?: RecordsTab.CURRENT,
+                            onPrimaryButtonClick = { viewModel.obtainEvent(RecordsEvent.OnPrimaryButtonClick) }
+                        )
+                    }
                 }
             }
         }
@@ -167,7 +169,10 @@ private fun RecordsTabContent(
                     "Здесь будут отображаться\nваши прошедшие записи" 
                 else 
                     "Здесь будут отображаться\nваши предстоящие записи",
-                style = MaterialTheme.typography.bodyMedium,
+                style = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 20.sp
+                ),
                 textAlign = TextAlign.Center,
                 color = Color.Black.copy(alpha = 0.87f)
             )

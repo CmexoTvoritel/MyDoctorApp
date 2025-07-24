@@ -6,6 +6,7 @@ import com.asc.mydoctorapp.core.domain.model.Doctor
 import com.asc.mydoctorapp.core.domain.repository.DoctorRepository
 import com.asc.mydoctorapp.core.data.remote.ApiService
 import com.asc.mydoctorapp.core.data.remote.DoctorDto
+import com.asc.mydoctorapp.core.domain.model.RecordInfo
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -82,6 +83,22 @@ class DoctorRepositoryImpl @Inject constructor(
             return false
         }
     }
+
+    override suspend fun getUserRecords(): List<RecordInfo> {
+        try {
+            val token = preferencesManager.userToken
+                ?: throw AppException("Unauthorized. Please login first.")
+            val requestBody = formRequestBodyForUserEvents(token)
+            val response = apiService.doctorRecords(requestBody)
+            if (response.isSuccessful) {
+                return (response.body()?.map { it.toDomain() }) ?: emptyList()
+            } else {
+                throw AppException("Failed to get user events: ${response.errorBody()?.string()}")
+            }
+        } catch (e: Exception) {
+            return emptyList()
+        }
+    }
     
     private fun formRequestBodyForDoctors(
         clinicName: String,
@@ -106,6 +123,13 @@ class DoctorRepositoryImpl @Inject constructor(
             put("year", request.year)
             put("hour", request.hour)
             put("minutes", request.minutes)
+        }.toString()
+        return parameters.toRequestBody(mediaTypeJson.toMediaTypeOrNull())
+    }
+
+    private fun formRequestBodyForUserEvents(token: String): RequestBody {
+        val parameters = JSONObject().apply {
+            put("token", token)
         }.toString()
         return parameters.toRequestBody(mediaTypeJson.toMediaTypeOrNull())
     }

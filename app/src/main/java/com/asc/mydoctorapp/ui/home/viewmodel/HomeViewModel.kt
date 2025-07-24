@@ -120,6 +120,6 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun handleFaqClick() {
-        sendViewAction(HomeAction.NavigateToFaq("faq"))
+
     }
 }

@@ -1,6 +1,8 @@
 package com.asc.mydoctorapp.ui.records.viewmodel
 
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.core.domain.usecase.GetUserRecordsUseCase
+import com.asc.mydoctorapp.navigation.AppRoutes
 import com.asc.mydoctorapp.ui.records.viewmodel.model.RecordUi
 import com.asc.mydoctorapp.ui.records.viewmodel.model.RecordsAction
 import com.asc.mydoctorapp.ui.records.viewmodel.model.RecordsEvent
@@ -8,58 +10,41 @@ import com.asc.mydoctorapp.ui.records.viewmodel.model.RecordsTab
 import com.asc.mydoctorapp.ui.records.viewmodel.model.RecordsUIState
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class RecordsViewModel @Inject constructor() : BaseSharedViewModel<RecordsUIState, RecordsAction, RecordsEvent>(
+class RecordsViewModel @Inject constructor(
+    private val getUserRecordsUseCase: GetUserRecordsUseCase
+) : BaseSharedViewModel<RecordsUIState, RecordsAction, RecordsEvent>(
     initialState = RecordsUIState(
         selectedTab = RecordsTab.CURRENT,
-        current = listOf(
-            RecordUi(
-                id = "1",
-                doctorName = "Иван Сидоров",
-                specialty = "кардиолог",
-                time = "15:00",
-                address = "Вавилова, 15",
-                clinic = "Клиника \"Здоровье\"",
-                photoRes = R.drawable.ic_doctor_placeholder,
-                isFavorite = true
-            ),
-            RecordUi(
-                id = "2",
-                doctorName = "Иван Сидоров",
-                specialty = "кардиолог",
-                time = "15:00",
-                address = "Вавилова, 15",
-                clinic = "Клиника \"Здоровье\"",
-                photoRes = R.drawable.ic_doctor_placeholder,
-                isFavorite = false
-            )
-        ),
-        past = listOf(
-            RecordUi(
-                id = "3",
-                doctorName = "Иван Сидоров",
-                specialty = "кардиолог",
-                time = "15:00",
-                address = "Вавилова, 15",
-                clinic = "Клиника \"Здоровье\"",
-                photoRes = R.drawable.ic_doctor_placeholder,
-                isFavorite = true
-            ),
-            RecordUi(
-                id = "4",
-                doctorName = "Иван Сидоров",
-                specialty = "кардиолог",
-                time = "15:00",
-                address = "Вавилова, 15",
-                clinic = "Клиника \"Здоровье\"",
-                photoRes = R.drawable.ic_doctor_placeholder,
-                isFavorite = false
-            )
-        )
+        current = emptyList(),
+        past = listOf()
     )
 ) {
+
+    init {
+        viewModelScope.launch {
+            val userEvents = getUserRecordsUseCase.invoke()
+            updateViewState { state ->
+                state.copy(
+                    current = userEvents.map {
+                        RecordUi(
+                            id = it.email ?: "",
+                            doctorName = "${it.docName} ${it.docSurname}",
+                            time = it.start ?: "",
+                            specialty = it.docSpecialty ?: "Врач",
+                            photoRes = R.drawable.ic_doctor_placeholder,
+                            isFavorite = false,
+                            address = "Вавилова, 15",
+                            clinic = "Клиника Здоровье"
+                        )
+                    }
+                )
+            }
+        }
+    }
 
     override fun obtainEvent(viewEvent: RecordsEvent) {
         when (viewEvent) {
@@ -99,7 +84,7 @@ class RecordsViewModel @Inject constructor() : BaseSharedViewModel<RecordsUIStat
         val selectedTab = viewStates().value?.selectedTab ?: RecordsTab.CURRENT
         when (selectedTab) {
             RecordsTab.CURRENT -> navigateToSearchDoctor()
-            RecordsTab.PAST -> navigateToSearchDoctor() // аналогичная логика для повторной записи
+            RecordsTab.PAST -> navigateToSearchDoctor()
         }
     }
     
@@ -108,6 +93,6 @@ class RecordsViewModel @Inject constructor() : BaseSharedViewModel<RecordsUIStat
     }
     
     private fun navigateToSearchDoctor() {
-        sendViewAction(RecordsAction.NavigateToSearchDoctor("search_doctor"))
+        sendViewAction(RecordsAction.NavigateToSearchDoctor(AppRoutes.DoctorList.route))
     }
 }

@@ -22,4 +22,7 @@ interface ApiService {
     
     @POST("/promt_bot")
     suspend fun prompt(@Body request: RequestBody): Response<ChatDto>
+
+    @POST("/user_confirmed_events")
+    suspend fun doctorRecords(@Body request: RequestBody): Response<List<RecordDto>>
 }
