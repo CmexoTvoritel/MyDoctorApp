@@ -99,6 +99,6 @@ private fun BottomBarItemComponent(
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(height = 18.dp))
+        Spacer(modifier = Modifier.height(height = 24.dp))
     }
 }

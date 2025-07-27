@@ -25,4 +25,13 @@ interface ApiService {
 
     @POST("/user_confirmed_events")
     suspend fun doctorRecords(@Body request: RequestBody): Response<List<RecordDto>>
+
+    @POST("/get_user")
+    suspend fun getUser(@Body request: RequestBody): Response<UserDto>
+
+    @PUT("/change_user_data")
+    suspend fun changeUserData(@Body request: RequestBody): Response<ResponseBody>
+
+    @POST("/get_clinics_by_name")
+    suspend fun getClinicByName(@Body request: RequestBody): Response<List<ClinicInfoDto>>
 }

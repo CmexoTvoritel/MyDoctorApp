@@ -6,6 +6,7 @@ import com.asc.mydoctorapp.core.domain.model.Doctor
 import com.asc.mydoctorapp.core.domain.repository.DoctorRepository
 import com.asc.mydoctorapp.core.data.remote.ApiService
 import com.asc.mydoctorapp.core.data.remote.DoctorDto
+import com.asc.mydoctorapp.core.domain.model.Clinic
 import com.asc.mydoctorapp.core.domain.model.RecordInfo
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -99,6 +100,20 @@ class DoctorRepositoryImpl @Inject constructor(
             return emptyList()
         }
     }
+
+    override suspend fun getClinicByName(query: String): List<Clinic> {
+        return try {
+            val requestBody = formRequestBodyForClinics(query)
+            val response = apiService.getClinicByName(requestBody)
+            if (response.isSuccessful) {
+                (response.body()?.map { it.toDomain() }) ?: emptyList()
+            } else {
+                throw AppException("Failed to get clinics: ${response.errorBody()?.string()}")
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
     
     private fun formRequestBodyForDoctors(
         clinicName: String,
@@ -130,6 +145,13 @@ class DoctorRepositoryImpl @Inject constructor(
     private fun formRequestBodyForUserEvents(token: String): RequestBody {
         val parameters = JSONObject().apply {
             put("token", token)
+        }.toString()
+        return parameters.toRequestBody(mediaTypeJson.toMediaTypeOrNull())
+    }
+
+    private fun formRequestBodyForClinics(query: String): RequestBody {
+        val parameters = JSONObject().apply {
+            put("clinic_name", query)
         }.toString()
         return parameters.toRequestBody(mediaTypeJson.toMediaTypeOrNull())
     }

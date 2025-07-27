@@ -1,22 +1,54 @@
 package com.asc.mydoctorapp.ui.profile.viewmodel
 
+import com.asc.mydoctorapp.core.domain.usecase.HardUpdateUserInfoUseCase
+import com.asc.mydoctorapp.core.domain.usecase.UserInfoUseCase
+import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileAction
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileEvent
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileUIState
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProfileViewModel @Inject constructor() : BaseSharedViewModel<ProfileUIState, ProfileAction, ProfileEvent>(
-    initialState = ProfileUIState(
-        userName = "Иван",
-        avatarRes = null,
-        favoritesCount = 0,
-        reviewsCount = 0,
-        hasMedicalBook = false
-    )
+class ProfileViewModel @Inject constructor(
+    private val userInfoUseCase: UserInfoUseCase,
+    private val preferencesManager: PreferencesManager,
+    private val hardUpdateUserInfo: HardUpdateUserInfoUseCase
+) : BaseSharedViewModel<ProfileUIState, ProfileAction, ProfileEvent>(
+    initialState = ProfileUIState()
 ) {
+
+    init {
+        loadUserInfo()
+    }
+    
+    fun refreshUserInfo() {
+        viewModelScope.launch {
+            val profileInfo = hardUpdateUserInfo.invoke()
+            updateViewState { state ->
+                state.copy(
+                    userName = profileInfo.name,
+                    userLogin = profileInfo.login,
+                    userBirth = profileInfo.birth,
+                )
+            }
+        }
+    }
+    
+    private fun loadUserInfo() {
+        viewModelScope.launch {
+            val profileInfo = userInfoUseCase.invoke()
+            updateViewState { state ->
+                state.copy(
+                    userName = profileInfo.name,
+                    userLogin = profileInfo.login,
+                    userBirth = profileInfo.birth,
+                )
+            }
+        }
+    }
 
     override fun obtainEvent(viewEvent: ProfileEvent) {
         when (viewEvent) {
@@ -26,6 +58,7 @@ class ProfileViewModel @Inject constructor() : BaseSharedViewModel<ProfileUIStat
             is ProfileEvent.OnMedicalBookClick -> handleMedicalBookClick()
             is ProfileEvent.OnSupportClick -> openChatSupport()
             is ProfileEvent.OnAvatarClick -> chooseNewAvatar()
+            is ProfileEvent.OnLogoutClick -> handleLogout()
         }
     }
 
@@ -58,22 +91,8 @@ class ProfileViewModel @Inject constructor() : BaseSharedViewModel<ProfileUIStat
         sendViewAction(ProfileAction.NavigateToAvatarSelection)
     }
 
-    // Для возможного использования в будущем
-    fun updateProfile(
-        userName: String? = null,
-        avatarRes: Int? = null,
-        favoritesCount: Int? = null,
-        reviewsCount: Int? = null,
-        hasMedicalBook: Boolean? = null
-    ) {
-        updateViewState { state ->
-            state.copy(
-                userName = userName ?: state.userName,
-                avatarRes = avatarRes ?: state.avatarRes,
-                favoritesCount = favoritesCount ?: state.favoritesCount,
-                reviewsCount = reviewsCount ?: state.reviewsCount,
-                hasMedicalBook = hasMedicalBook ?: state.hasMedicalBook
-            )
-        }
+    private fun handleLogout() {
+        preferencesManager.userToken = null
+        sendViewAction(ProfileAction.Logout)
     }
 }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -45,10 +46,12 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.navigation.AppRoutes
+import com.asc.mydoctorapp.ui.home.components.ClinicSearchCard
 import com.asc.mydoctorapp.ui.home.components.DoctorCard
 import com.asc.mydoctorapp.ui.home.viewmodel.HomeViewModel
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeAction
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeEvent
+import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeUIStateType
 
 private val TealColor = Color(0xFF43B3AE)
 
@@ -95,7 +98,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Поиск клиники или специалиста",
+            text = "Поиск клиники",
             style = TextStyle(
                 fontWeight = FontWeight.Normal,
                 fontSize = 16.sp,
@@ -110,7 +113,7 @@ fun HomeScreen(
             onValueChange = { viewModel.obtainEvent(HomeEvent.OnQueryChanged(it)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp),
+                .height(52.dp),
             placeholder = { Text(" ") },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
@@ -133,153 +136,172 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Карточка AI-чата
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(160.dp)
-                .border(
-                    width = 1.dp,
-                    color = TealColor,
-                    shape = RoundedCornerShape(12.dp)
-                )
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-                    .padding(all = 16.dp)
-                    .align(alignment = Alignment.CenterVertically)
-            ) {
-                Text(
-                    modifier = Modifier.padding(end = 8.dp),
-                    text = "Проверьте симптомы в чате с искусственным интеллектом",
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Normal
-                    ),
-                    color = Color.Black
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                OutlinedButton(
-                    onClick = { viewModel.obtainEvent(HomeEvent.OnAiChatStartClick) },
-                    modifier = Modifier
-                        .width(90.dp)
-                        .height(32.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    border = androidx.compose.foundation.BorderStroke(
+        if (state?.screenState == HomeUIStateType.MAIN) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .border(
                         width = 1.dp,
-                        color = TealColor
+                        color = TealColor,
+                        shape = RoundedCornerShape(12.dp)
                     )
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f)
+                        .padding(all = 16.dp)
+                        .align(alignment = Alignment.CenterVertically)
                 ) {
                     Text(
-                        text = "Начать",
+                        modifier = Modifier.padding(end = 8.dp),
+                        text = "Проверьте симптомы в чате с искусственным интеллектом",
                         style = TextStyle(
-                            fontSize = 17.sp,
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Normal
                         ),
                         color = Color.Black
                     )
-                }
-            }
 
-            Image(
-                painter = painterResource(id = R.drawable.ic_ai_help_main),
-                contentDescription = "AI Chat",
-                contentScale = ContentScale.FillHeight,
-                modifier = Modifier
-                    .height(height = 140.dp)
-                    .align(alignment = Alignment.Bottom)
-            )
-        }
+                    Spacer(modifier = Modifier.height(12.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    viewModel.obtainEvent(HomeEvent.OnSeeAllSpecialistsClick)
-                },
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Специалисты для Вас",
-                style = TextStyle(
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 16.sp,
-                ),
-                color = Color.Black.copy(alpha = 0.7f)
-            )
-            Spacer(modifier = Modifier.width(width = 4.dp))
-            Icon(
-                modifier = Modifier.size(22.dp),
-                imageVector = Icons.Rounded.ArrowForward,
-                contentDescription = "Смотреть всех специалистов",
-                tint = TealColor
-            )
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Горизонтальный список докторов
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(state?.doctors ?: emptyList()) { doctor ->
-                DoctorCard(
-                    doctor = doctor,
-                    isFavorite = state?.favorites?.contains(doctor.id) ?: false,
-                    onDoctorClick = { doctorId ->
-                        viewModel.obtainEvent(HomeEvent.OnDoctorCardClick(doctorId))
-                    },
-                    onFavoriteToggle = { doctorId, isFavorite ->
-                        viewModel.obtainEvent(HomeEvent.OnDoctorFavoriteToggle(doctorId, isFavorite))
+                    OutlinedButton(
+                        onClick = { viewModel.obtainEvent(HomeEvent.OnAiChatStartClick) },
+                        modifier = Modifier
+                            .width(90.dp)
+                            .height(32.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 1.dp,
+                            color = TealColor
+                        )
+                    ) {
+                        Text(
+                            text = "Начать",
+                            style = TextStyle(
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Normal
+                            ),
+                            color = Color.Black
+                        )
                     }
+                }
+
+                Image(
+                    painter = painterResource(id = R.drawable.ic_ai_help_main),
+                    contentDescription = "AI Chat",
+                    contentScale = ContentScale.FillHeight,
+                    modifier = Modifier
+                        .height(height = 140.dp)
+                        .align(alignment = Alignment.Bottom)
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        // Кнопка FAQ внизу
-        OutlinedButton(
-            onClick = { viewModel.obtainEvent(HomeEvent.OnFaqClick) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(
-                width = 1.dp,
-                color = TealColor
-            ),
-            contentPadding = PaddingValues(horizontal = 16.dp)
-        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        viewModel.obtainEvent(HomeEvent.OnSeeAllSpecialistsClick)
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Остались вопросы?",
+                    text = "Специалисты для Вас",
                     style = TextStyle(
                         fontWeight = FontWeight.Normal,
-                        fontSize = 17.sp,
+                        fontSize = 16.sp,
                     ),
                     color = Color.Black.copy(alpha = 0.7f)
                 )
+                Spacer(modifier = Modifier.width(width = 4.dp))
                 Icon(
-                    modifier = Modifier.size(30.dp),
-                    painter = painterResource(id = R.drawable.ic_question_widget),
-                    contentDescription = "FAQ",
-                    tint = Color.Unspecified
+                    modifier = Modifier.size(22.dp),
+                    imageVector = Icons.Rounded.ArrowForward,
+                    contentDescription = "Смотреть всех специалистов",
+                    tint = TealColor
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(state?.doctors ?: emptyList()) { doctor ->
+                    DoctorCard(
+                        doctor = doctor,
+                        isFavorite = state?.favorites?.contains(doctor.id) ?: false,
+                        onDoctorClick = { doctorId ->
+                            viewModel.obtainEvent(HomeEvent.OnDoctorCardClick(doctorId))
+                        },
+                        onFavoriteToggle = { doctorId, isFavorite ->
+                            viewModel.obtainEvent(
+                                HomeEvent.OnDoctorFavoriteToggle(
+                                    doctorId,
+                                    isFavorite
+                                )
+                            )
+                        }
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Кнопка FAQ внизу
+            OutlinedButton(
+                onClick = { viewModel.obtainEvent(HomeEvent.OnFaqClick) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = TealColor
+                ),
+                contentPadding = PaddingValues(horizontal = 16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Остались вопросы?",
+                        style = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 17.sp,
+                        ),
+                        color = Color.Black.copy(alpha = 0.7f)
+                    )
+                    Icon(
+                        modifier = Modifier.size(30.dp),
+                        painter = painterResource(id = R.drawable.ic_question_widget),
+                        contentDescription = "FAQ",
+                        tint = Color.Unspecified
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+        } else if (state?.screenState == HomeUIStateType.SEARCH) {
+            Column {
+                state?.clinics?.forEach { clinic ->
+                    ClinicSearchCard(
+                        clinicName = clinic.name ?: "",
+                        clinicAddress = clinic.address ?: "",
+                        clinicEmail = clinic.email ?: "",
+                        clinicPhone = clinic.phone ?: "",
+                        clinicWorkingTime = clinic.workingDays ?: "",
+                        onClinicClick = { clinicName ->
+                            viewModel.obtainEvent(viewEvent = HomeEvent.OnClinicCardClick(clinicName))
+                        }
+                    )
+                }
+            }
+        }
     }
 }

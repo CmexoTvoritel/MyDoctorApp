@@ -1,37 +1,32 @@
 package com.asc.mydoctorapp.ui.profile.viewmodel.model
 
-/**
- * Состояние UI для экрана профиля
- */
 data class ProfileUIState(
-    val userName: String = "Иван",
+    val userName: String? = null,
+    val userLogin: String? = null,
+    val userBirth: String? = null,
     val avatarRes: Int? = null,      // drawable или null -> серый circle placeholder
     val favoritesCount: Int = 0,     // 0 = пусто
     val reviewsCount: Int = 0,       // 0 = пусто
     val hasMedicalBook: Boolean = false
 )
 
-/**
- * События, которые могут происходить на экране профиля
- */
 sealed interface ProfileEvent {
-    object OnSettingsClick : ProfileEvent
-    object OnFavoritesClick : ProfileEvent
-    object OnReviewsClick : ProfileEvent
-    object OnMedicalBookClick : ProfileEvent
-    object OnSupportClick : ProfileEvent
-    object OnAvatarClick : ProfileEvent
+    data object OnSettingsClick : ProfileEvent
+    data object OnFavoritesClick : ProfileEvent
+    data object OnReviewsClick : ProfileEvent
+    data object OnMedicalBookClick : ProfileEvent
+    data object OnSupportClick : ProfileEvent
+    data object OnAvatarClick : ProfileEvent
+    data object OnLogoutClick : ProfileEvent
 }
 
-/**
- * Действия для навигации из экрана профиля
- */
 sealed interface ProfileAction {
-    object NavigateToSettings : ProfileAction
-    object NavigateToFavorites : ProfileAction
-    object NavigateToReviews : ProfileAction
-    object NavigateToMedicalBookView : ProfileAction
-    object NavigateToMedicalBookCreate : ProfileAction
-    object NavigateToSupportChat : ProfileAction
-    object NavigateToAvatarSelection : ProfileAction
+    data object NavigateToSettings : ProfileAction
+    data object NavigateToFavorites : ProfileAction
+    data object NavigateToReviews : ProfileAction
+    data object NavigateToMedicalBookView : ProfileAction
+    data object NavigateToMedicalBookCreate : ProfileAction
+    data object NavigateToSupportChat : ProfileAction
+    data object NavigateToAvatarSelection : ProfileAction
+    data object Logout : ProfileAction
 }

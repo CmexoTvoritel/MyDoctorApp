@@ -2,28 +2,44 @@ package com.asc.mydoctorapp.ui.home.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.core.domain.usecase.GetClinicByQueryUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorsUseCase
+import com.asc.mydoctorapp.core.domain.usecase.UserInfoUseCase
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.navigation.AppRoutes
 import com.asc.mydoctorapp.ui.home.viewmodel.model.DoctorUi
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeAction
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeEvent
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeUIState
+import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeUIStateType
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
-    private val getDoctorsUseCase: GetDoctorsUseCase
+    private val getDoctorsUseCase: GetDoctorsUseCase,
+    private val userInfoUseCase: UserInfoUseCase,
+    private val getClinicByQueryUseCase: GetClinicByQueryUseCase
 ) : BaseSharedViewModel<HomeUIState, HomeAction, HomeEvent>(
     initialState = HomeUIState()
 ) {
+
+    private var searchJob: Job? = null
     
     init {
         loadDoctors()
+        loadUserInfo()
+    }
+
+    private fun loadUserInfo() = viewModelScope.launch {
+        userInfoUseCase.invoke()
     }
     
     private fun loadDoctors() {
@@ -61,14 +77,38 @@ class HomeViewModel @Inject constructor(
             is HomeEvent.OnDoctorCardClick -> handleDoctorCardClick(viewEvent.doctorId)
             is HomeEvent.OnDoctorFavoriteToggle -> handleDoctorFavoriteToggle(viewEvent.doctorId, viewEvent.isFavorite)
             is HomeEvent.OnFaqClick -> handleFaqClick()
+            is HomeEvent.OnClinicCardClick -> handleClinicCardClick(viewEvent.clinicName)
         }
     }
 
-    private fun handleQueryChange(text: String) {
+    private fun handleQueryChange(text: String) = viewModelScope.launch {
         updateViewState { state ->
             state.copy(
-                query = text
+                query = text,
+                screenState = if (text.isEmpty()) HomeUIStateType.MAIN else HomeUIStateType.SEARCH
             )
+        }
+        searchJob?.cancel()
+
+        // если строка пустая — чистим результаты и выходим
+        if (text.isBlank()) {
+            updateViewState { it.copy(clinics = emptyList() /*, isSearching = false */) }
+            return@launch
+        }
+
+        searchJob = viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val clinics = getClinicByQueryUseCase(text)
+                withContext(Dispatchers.Main) {
+                    updateViewState { it.copy(clinics = clinics /*, isSearching = false */) }
+                }
+            } catch (ce: CancellationException) {
+                throw ce
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    updateViewState { it.copy(clinics = emptyList() /*, isSearching = false */) }
+                }
+            }
         }
     }
 
@@ -121,5 +161,10 @@ class HomeViewModel @Inject constructor(
 
     private fun handleFaqClick() {
 
+    }
+
+    private fun handleClinicCardClick(clinicName: String) {
+        val route = AppRoutes.DoctorList.route.replace("{clinicName}", clinicName)
+        sendViewAction(action = HomeAction.NavigateToSpecialistsList(route))
     }
 }

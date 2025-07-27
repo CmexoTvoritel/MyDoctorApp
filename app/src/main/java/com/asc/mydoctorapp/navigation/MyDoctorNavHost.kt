@@ -15,6 +15,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.navOptions
 import androidx.navigation.navArgument
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.ui.changeuser.ChangeUserScreen
 import com.asc.mydoctorapp.ui.chat.ChatScreen
 import com.asc.mydoctorapp.ui.doctordetail.DoctorDetailScreen
 import com.asc.mydoctorapp.ui.doctorlist.DoctorListScreen
@@ -27,6 +28,7 @@ import com.asc.mydoctorapp.ui.profile.ProfileScreen
 import com.asc.mydoctorapp.ui.records.RecordsScreen
 import com.asc.mydoctorapp.ui.registration.RegistrationScreen
 import com.asc.mydoctorapp.ui.reviews.ReviewsScreen
+import com.asc.mydoctorapp.ui.settings.SettingsScreen
 import com.asc.mydoctorapp.ui.splash.SplashScreen
 import java.time.LocalDate
 import java.time.LocalTime
@@ -64,7 +66,7 @@ enum class AppRoutes(val route: String) {
     Login("login"),
     Registration("registration"),
     Home("home"),
-    DoctorList("home/doctorList"),
+    DoctorList("home/doctorList/{clinicName}"),
     DoctorDetails("home/doctorDetails/{doctorEmail}"),
     ReviewsList("home/reviewsList/{isMyReviews}"),
     DoctorRecord("home/doctorRecord/{doctorEmail}"),
@@ -75,6 +77,7 @@ enum class AppRoutes(val route: String) {
     RecordsDetails("records/details"),
     Profile("profile"),
     ProfileSettings("profile/settings"),
+    ProfileEdit("profile/edit")
 }
 
 @Composable
@@ -170,8 +173,18 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
                 }
             )
         }
-        composable(route = AppRoutes.DoctorList.route) {
+        composable(
+            route = AppRoutes.DoctorList.route,
+            arguments = listOf(
+                navArgument("clinicName") {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val clinicName = backStackEntry.arguments?.getString("clinicName") ?: "Clinic1"
             DoctorListScreen(
+                clinicName = clinicName,
                 onNavigateToScreen = { route ->
                     navController.navigate(route)
                 },
@@ -291,12 +304,35 @@ private fun NavGraphBuilder.profileNavigationGraph(navController: NavController)
         route = "profile_graph"
     ) {
         composable(route = AppRoutes.Profile.route) {
-            ProfileScreen { route ->
-                navController.navigate(route)
-            }
+            ProfileScreen(
+                navigateTo = { route -> navController.navigate(route) },
+                logoutNavigate = {
+                    navController.navigate(AppRoutes.Login.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                        restoreState = false
+                    }
+                }
+            )
         }
         composable(route = AppRoutes.ProfileSettings.route) {
-
+            SettingsScreen(
+                onNavigateTo = { route ->
+                    navController.navigate(route)
+                },
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+        composable(route = AppRoutes.ProfileEdit.route) {
+            ChangeUserScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
         }
     }
 }

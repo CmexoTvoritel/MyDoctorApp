@@ -1,8 +1,18 @@
 package com.asc.mydoctorapp.ui.home.viewmodel.model
 
+import com.asc.mydoctorapp.core.domain.model.Clinic
+import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.ClinicInfo
+
+enum class HomeUIStateType {
+    MAIN,
+    SEARCH
+}
+
 data class HomeUIState(
+    val screenState: HomeUIStateType = HomeUIStateType.MAIN,
     val query: String = "",
     val doctors: List<DoctorUi> = emptyList(),
+    val clinics: List<Clinic> = emptyList(),
     val favorites: Set<String> = emptySet(), // id докторов
     val isSearching: Boolean = false
 )
@@ -26,7 +36,8 @@ sealed interface HomeEvent {
         val doctorId: String,
         val isFavorite: Boolean
     ) : HomeEvent
-    object OnFaqClick : HomeEvent                                    // «Остались вопросы?»
+    object OnFaqClick : HomeEvent
+    data class OnClinicCardClick(val clinicName: String) : HomeEvent
 }
 
 sealed interface HomeAction {

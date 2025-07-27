@@ -72,8 +72,8 @@ object NetworkModule {
     
     @Provides
     @Singleton
-    fun provideAuthRepository(apiService: ApiService): AuthRepository {
-        return AuthRepositoryImpl(apiService)
+    fun provideAuthRepository(apiService: ApiService, preferencesManager: PreferencesManager): AuthRepository {
+        return AuthRepositoryImpl(apiService, preferencesManager)
     }
     
     @Provides

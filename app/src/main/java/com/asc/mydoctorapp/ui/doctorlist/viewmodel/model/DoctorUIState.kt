@@ -12,6 +12,7 @@ sealed interface DoctorAction {
 }
 
 sealed interface DoctorEvent {
+    data class InitLoad(val clinicName: String) : DoctorEvent
     data object OnBackClick : DoctorEvent
     data class OnDoctorClick(val doctorId: String) : DoctorEvent
     data class OnFavoriteToggle(val doctorId: String, val newValue: Boolean) : DoctorEvent

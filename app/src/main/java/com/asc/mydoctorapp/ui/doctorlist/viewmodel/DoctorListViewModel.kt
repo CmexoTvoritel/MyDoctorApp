@@ -17,14 +17,11 @@ class DoctorListViewModel @Inject constructor(
 ): BaseSharedViewModel<DoctorUIState, DoctorAction, DoctorEvent>(
     initialState = DoctorUIState(emptyList())
 ) {
-    init {
-        loadDoctors()
-    }
     
-    private fun loadDoctors() {
+    private fun loadDoctors(clinicName: String) {
         viewModelScope.launch {
             try {
-                val doctors = getDoctorsUseCase("Clinic1").map { doctor ->
+                val doctors = getDoctorsUseCase(clinicName).map { doctor ->
                     DoctorUIItem(
                         id = doctor.email,
                         name = doctor.name,
@@ -52,6 +49,9 @@ class DoctorListViewModel @Inject constructor(
 
     override fun obtainEvent(viewEvent: DoctorEvent) {
         when (viewEvent) {
+            is DoctorEvent.InitLoad -> {
+                loadDoctors(clinicName = viewEvent.clinicName)
+            }
             DoctorEvent.OnBackClick -> {
                 sendViewAction(DoctorAction.NavigateBack)
             }

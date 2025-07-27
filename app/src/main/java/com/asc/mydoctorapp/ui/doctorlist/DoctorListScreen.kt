@@ -29,10 +29,16 @@ import com.asc.mydoctorapp.ui.doctorlist.viewmodel.model.DoctorEvent
 
 @Composable
 fun DoctorListScreen(
+    clinicName: String,
     onNavigateToScreen: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val viewModel: DoctorListViewModel = hiltViewModel()
+
+    LaunchedEffect(Unit) {
+        viewModel.obtainEvent(viewEvent = DoctorEvent.InitLoad(clinicName))
+    }
+
     val state by viewModel.viewStates().collectAsState()
 
     LaunchedEffect(Unit) {
