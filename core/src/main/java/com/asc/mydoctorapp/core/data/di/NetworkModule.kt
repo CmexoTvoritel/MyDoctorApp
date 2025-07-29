@@ -25,7 +25,7 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "https://backend-3-4sig.onrender.com"
+    private const val BASE_URL = "https://ipa-8w10.onrender.com"
     
     @Provides
     @Singleton

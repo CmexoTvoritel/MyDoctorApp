@@ -113,7 +113,6 @@ fun DoctorDetailScreen(
     )
     
     Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
-        // Фиксированная стрелка назад
         Icon(
             painter = painterResource(id = R.drawable.ic_back_navigation),
             contentDescription = "Назад",
@@ -142,11 +141,11 @@ fun DoctorDetailScreen(
                 modifier = Modifier
                     .weight(weight = 1f)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp)
             ) {
                 // Шапка с информацией о враче
                 Row(
                     modifier = Modifier.fillMaxWidth()
+                        .padding(horizontal = 24.dp)
                 ) {
                     // Фото врача
                     Surface(
@@ -220,7 +219,8 @@ fun DoctorDetailScreen(
                 
                 // Теги - FlowRow
                 FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(horizontal = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
@@ -247,7 +247,7 @@ fun DoctorDetailScreen(
                 // Отзывы
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(end = 8.dp)
+                    contentPadding = PaddingValues(start = 24.dp, end = 32.dp)
                 ) {
                     items(state?.reviews ?: emptyList()) { review ->
                         ReviewCard(
@@ -284,6 +284,7 @@ fun DoctorDetailScreen(
                 
                 // Образование
                 Text(
+                    modifier = Modifier.padding(horizontal = 24.dp),
                     text = "Сведения об образовании",
                     style = headingStyle
                 )
@@ -293,6 +294,7 @@ fun DoctorDetailScreen(
                 // Список образований
                 state?.education?.forEach { educationItem ->
                     Text(
+                        modifier = Modifier.padding(horizontal = 24.dp),
                         text = educationItem,
                         style = bodyMediumStyle
                     )
@@ -301,6 +303,7 @@ fun DoctorDetailScreen(
                 
                 // Место работы
                 Text(
+                    modifier = Modifier.padding(horizontal = 24.dp),
                     text = "Врач принимает:",
                     style = headingStyle
                 )
@@ -309,6 +312,7 @@ fun DoctorDetailScreen(
                 
                 // Информация о клинике (с буллетами)
                 Row(
+                    modifier = Modifier.padding(horizontal = 24.dp),
                     verticalAlignment = Alignment.Top
                 ) {
                     Box(
@@ -328,6 +332,7 @@ fun DoctorDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Row(
+                    modifier = Modifier.padding(horizontal = 24.dp),
                     verticalAlignment = Alignment.Top
                 ) {
                     Box(
@@ -347,6 +352,7 @@ fun DoctorDetailScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Row(
+                    modifier = Modifier.padding(horizontal = 24.dp),
                     verticalAlignment = Alignment.Top
                 ) {
                     Box(
@@ -373,6 +379,7 @@ fun DoctorDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(72.dp)
+                        .padding(horizontal = 24.dp)
                         .clickable { viewModel.obtainEvent(DoctorDetailEvent.OnSupportClick) }
                 ) {
                     Row(
@@ -419,7 +426,7 @@ fun DoctorDetailScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(76.dp)
-                        .padding(vertical = 12.dp)
+                        .padding(vertical = 12.dp, horizontal = 24.dp),
                 ) {
                     Text(
                         text = "Записаться на приём",

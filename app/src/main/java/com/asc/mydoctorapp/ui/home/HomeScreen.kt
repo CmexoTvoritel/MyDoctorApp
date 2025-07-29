@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -84,12 +83,12 @@ fun HomeScreen(
             .fillMaxSize()
             .background(color = Color.White)
             .verticalScroll(scrollState)
-            .padding(horizontal = 24.dp)
+            //.padding(horizontal = 24.dp)
     ) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Image(
-            modifier = Modifier.width(width = 150.dp),
+            modifier = Modifier.width(width = 174.dp).padding(horizontal = 24.dp),
             painter = painterResource(id = R.drawable.ic_onboarding_logo),
             contentDescription = null,
             contentScale = ContentScale.FillWidth
@@ -98,6 +97,7 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
+            modifier = Modifier.padding(horizontal = 24.dp),
             text = "Поиск клиники",
             style = TextStyle(
                 fontWeight = FontWeight.Normal,
@@ -113,7 +113,8 @@ fun HomeScreen(
             onValueChange = { viewModel.obtainEvent(HomeEvent.OnQueryChanged(it)) },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
+                .height(52.dp)
+                .padding(horizontal = 24.dp),
             placeholder = { Text(" ") },
             singleLine = true,
             shape = RoundedCornerShape(12.dp),
@@ -141,6 +142,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(160.dp)
+                    .padding(horizontal = 24.dp)
                     .border(
                         width = 1.dp,
                         color = TealColor,
@@ -201,6 +203,7 @@ fun HomeScreen(
 
             Row(
                 modifier = Modifier.fillMaxWidth()
+                    .padding(horizontal = 24.dp)
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
@@ -229,7 +232,8 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp)
             ) {
                 items(state?.doctors ?: emptyList()) { doctor ->
                     DoctorCard(
@@ -257,6 +261,7 @@ fun HomeScreen(
                 onClick = { viewModel.obtainEvent(HomeEvent.OnFaqClick) },
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
                     .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 border = androidx.compose.foundation.BorderStroke(
@@ -288,7 +293,9 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.height(24.dp))
         } else if (state?.screenState == HomeUIStateType.SEARCH) {
-            Column {
+            Column(
+                modifier = Modifier.padding(horizontal = 24.dp)
+            ) {
                 state?.clinics?.forEach { clinic ->
                     ClinicSearchCard(
                         clinicName = clinic.name ?: "",
@@ -300,6 +307,7 @@ fun HomeScreen(
                             viewModel.obtainEvent(viewEvent = HomeEvent.OnClinicCardClick(clinicName))
                         }
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }

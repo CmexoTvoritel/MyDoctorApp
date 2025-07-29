@@ -93,13 +93,23 @@ fun MyDoctorNavHost(
         // Splash Screen
         composable(route = AppRoutes.Splash.route) {
             SplashScreen { route ->
-                navController.navigate(route)
+                navController.navigate(route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        inclusive = true
+                    }
+                    launchSingleTop = true
+                    restoreState = false
+                }
             }
         }
 
         composable(route = AppRoutes.OnBoarding.route) {
-            OnboardingScreen() { route ->
-                navController.navigate(route)
+            OnboardingScreen { route ->
+                navController.navigate(route) {
+                    popUpTo(AppRoutes.OnBoarding.route) {
+                        inclusive = true
+                    }
+                }
             }
         }
 

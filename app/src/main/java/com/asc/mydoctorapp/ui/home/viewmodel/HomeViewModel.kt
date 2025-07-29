@@ -138,7 +138,8 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun handleSeeAllSpecialists() {
-        sendViewAction(HomeAction.NavigateToSpecialistsList(AppRoutes.DoctorList.route))
+        val route = AppRoutes.DoctorList.route.replace("{clinicName}", "Clinic1")
+        sendViewAction(action = HomeAction.NavigateToSpecialistsList(route))
     }
 
     private fun handleDoctorCardClick(doctorId: String) {

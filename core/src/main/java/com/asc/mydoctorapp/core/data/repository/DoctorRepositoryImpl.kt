@@ -24,12 +24,11 @@ class DoctorRepositoryImpl @Inject constructor(
     private val mediaTypeJson = "application/json"
     
     // Кэш докторов
-    private var doctorCache: List<DoctorDto> = emptyList()
+    private var doctorCache: Map<String, List<DoctorDto>> = mapOf()
 
     override suspend fun getDoctors(clinicName: String): List<Doctor> {
-        // Если кэш не пустой, возвращаем его
-        if (doctorCache.isNotEmpty()) {
-            return doctorCache.map { it.toDomain() }
+        if (!doctorCache[clinicName].isNullOrEmpty()) {
+            return doctorCache[clinicName]!!.map { it.toDomain() }
         }
         
         // Иначе загружаем с сервера
@@ -42,7 +41,7 @@ class DoctorRepositoryImpl @Inject constructor(
             
             if (response.isSuccessful) {
                 val doctorsInitial = response.body()
-                doctorCache = doctorsInitial ?: emptyList()
+                doctorCache += (clinicName to (doctorsInitial ?: emptyList()))
                 val doctors = doctorsInitial?.map { it.toDomain() } ?: emptyList()
                 doctors
             } else {
@@ -54,16 +53,13 @@ class DoctorRepositoryImpl @Inject constructor(
     }
     
     override suspend fun getDoctorByEmail(email: String): Doctor {
-        // Проверяем, есть ли доктор в кэше
-        val cachedDoctor = doctorCache.find { it.email == email }
+        val cachedDoctor = doctorCache.values.flatten().find { it.email == email }
         if (cachedDoctor != null) {
             return cachedDoctor.toDomain()
         }
-        
-        // Если кэш пуст или доктора нет в кэше, загружаем список докторов с сервера
+
         val doctors = getDoctors("Clinic1")
-        
-        // Ищем доктора в обновленном кэше
+
         return doctors.find { it.email == email }
             ?: throw AppException("Doctor with email $email not found")
     }

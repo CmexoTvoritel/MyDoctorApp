@@ -17,7 +17,7 @@ interface ApiService {
     @POST("/get_doctors_by_clinic_name")
     suspend fun doctors(@Body request: RequestBody): Response<List<DoctorDto>>
     
-    @PUT("/book_appointment")
+    @PUT("/add_appointment_data")
     suspend fun book(@Body request: RequestBody): Response<ResponseBody>
     
     @POST("/promt_bot")
