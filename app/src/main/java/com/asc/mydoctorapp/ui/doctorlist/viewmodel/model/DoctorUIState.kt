@@ -1,9 +1,12 @@
 package com.asc.mydoctorapp.ui.doctorlist.viewmodel.model
 
+import com.asc.mydoctorapp.core.domain.model.Clinic
 import com.asc.mydoctorapp.ui.doctorlist.model.DoctorUIItem
 
 data class DoctorUIState (
-    val doctorList: List<DoctorUIItem> = emptyList()
+    val isLoading: Boolean = true,
+    val doctorList: List<DoctorUIItem> = emptyList(),
+    val clinic: Clinic? = null
 )
 
 sealed interface DoctorAction {

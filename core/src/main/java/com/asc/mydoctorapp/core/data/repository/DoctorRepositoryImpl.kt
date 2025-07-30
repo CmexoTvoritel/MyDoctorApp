@@ -25,6 +25,7 @@ class DoctorRepositoryImpl @Inject constructor(
     
     // Кэш докторов
     private var doctorCache: Map<String, List<DoctorDto>> = mapOf()
+    private var clinicCache: List<Clinic> = emptyList()
 
     override suspend fun getDoctors(clinicName: String): List<Doctor> {
         if (!doctorCache[clinicName].isNullOrEmpty()) {
@@ -106,6 +107,12 @@ class DoctorRepositoryImpl @Inject constructor(
             }
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    override suspend fun getAllClinics(): List<Clinic> {
+        return clinicCache.ifEmpty {
+            getClinicByName("")
         }
     }
     

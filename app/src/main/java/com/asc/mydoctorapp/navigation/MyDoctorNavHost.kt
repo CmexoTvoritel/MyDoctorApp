@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.ui.changeuser.ChangeUserScreen
 import com.asc.mydoctorapp.ui.chat.ChatScreen
+import com.asc.mydoctorapp.ui.cliniclist.ClinicListScreen
 import com.asc.mydoctorapp.ui.doctordetail.DoctorDetailScreen
 import com.asc.mydoctorapp.ui.doctorlist.DoctorListScreen
 import com.asc.mydoctorapp.ui.doctorrecord.DoctorRecordScreen
@@ -67,6 +68,7 @@ enum class AppRoutes(val route: String) {
     Login("login"),
     Registration("registration"),
     Home("home"),
+    ClinicList("/home/clinicsList"),
     DoctorList("home/doctorList/{clinicName}"),
     DoctorDetails("home/doctorDetails/{doctorEmail}/{clinicName}"),
     ReviewsList("home/reviewsList/{isMyReviews}"),
@@ -181,6 +183,16 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
             HomeScreen(
                 navigateTo = { route ->
                     navController.navigate(route)
+                }
+            )
+        }
+        composable(route = AppRoutes.ClinicList.route) {
+            ClinicListScreen(
+                onClinicClick = { route ->
+                    navController.navigate(route)
+                },
+                onBackClick = {
+                    navController.popBackStack()
                 }
             )
         }

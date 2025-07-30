@@ -11,9 +11,10 @@ enum class HomeUIStateType {
 data class HomeUIState(
     val screenState: HomeUIStateType = HomeUIStateType.MAIN,
     val query: String = "",
+    val clinicsMain: List<Clinic> = emptyList(),
     val doctors: List<DoctorUi> = emptyList(),
     val clinics: List<Clinic> = emptyList(),
-    val favorites: Set<String> = emptySet(), // id докторов
+    val favorites: Set<String> = emptySet(),
     val isSearching: Boolean = false
 )
 

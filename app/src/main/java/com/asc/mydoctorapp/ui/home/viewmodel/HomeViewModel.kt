@@ -2,6 +2,7 @@ package com.asc.mydoctorapp.ui.home.viewmodel
 
 import androidx.lifecycle.viewModelScope
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.core.domain.usecase.GetAllClinicsUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetClinicByQueryUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorsUseCase
 import com.asc.mydoctorapp.core.domain.usecase.UserInfoUseCase
@@ -25,6 +26,7 @@ import kotlin.coroutines.cancellation.CancellationException
 class HomeViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val getDoctorsUseCase: GetDoctorsUseCase,
+    private val getAllClinicsUseCase: GetAllClinicsUseCase,
     private val userInfoUseCase: UserInfoUseCase,
     private val getClinicByQueryUseCase: GetClinicByQueryUseCase
 ) : BaseSharedViewModel<HomeUIState, HomeAction, HomeEvent>(
@@ -34,7 +36,7 @@ class HomeViewModel @Inject constructor(
     private var searchJob: Job? = null
     
     init {
-        loadDoctors()
+        loadClinics()
         loadUserInfo()
     }
 
@@ -42,24 +44,25 @@ class HomeViewModel @Inject constructor(
         userInfoUseCase.invoke()
     }
     
-    private fun loadDoctors() {
+    private fun loadClinics() {
         viewModelScope.launch {
             try {
-                val doctors = getDoctorsUseCase("Clinic1")
-                    .take(5) // Показываем только первые 5 докторов
-                    .map { doctor ->
-                        DoctorUi(
-                            id = doctor.email, // Используем email как ID
-                            name = doctor.name,
-                            surname = doctor.surname,
-                            specialty = doctor.specialty,
-                            rating = 5.0f,
-                            photoRes = R.drawable.ic_doctor_placeholder
-                        )
-                    }
+                val clinics = getAllClinicsUseCase()
+//                val doctors = getDoctorsUseCase("Clinic1")
+//                    .take(5) // Показываем только первые 5 докторов
+//                    .map { doctor ->
+//                        DoctorUi(
+//                            id = doctor.email, // Используем email как ID
+//                            name = doctor.name,
+//                            surname = doctor.surname,
+//                            specialty = doctor.specialty,
+//                            rating = 5.0f,
+//                            photoRes = R.drawable.ic_doctor_placeholder
+//                        )
+//                    }
                 
                 updateViewState { state ->
-                    state.copy(doctors = doctors)
+                    state.copy(clinicsMain = clinics)
                 }
             } catch (e: Exception) {
                 // Обработка ошибок загрузки
@@ -138,8 +141,8 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun handleSeeAllSpecialists() {
-        val route = AppRoutes.DoctorList.route.replace("{clinicName}", "Clinic1")
-        sendViewAction(action = HomeAction.NavigateToSpecialistsList(route))
+        //val route = AppRoutes.DoctorList.route.replace("{clinicName}", "Clinic1")
+        sendViewAction(action = HomeAction.NavigateToSpecialistsList(AppRoutes.ClinicList.route))
     }
 
     private fun handleDoctorCardClick(doctorId: String) {

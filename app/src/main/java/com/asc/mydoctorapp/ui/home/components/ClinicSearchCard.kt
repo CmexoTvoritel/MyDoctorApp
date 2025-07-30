@@ -59,7 +59,7 @@ fun ClinicSearchCard(
             Column(Modifier.weight(1f)) {
                 Text("$clinicName, адрес: $clinicAddress", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
                 Text("Почта: $clinicEmail", style = MaterialTheme.typography.bodyMedium, color = Color.Black.copy(alpha = 0.6f))
-                Text("Почта: $clinicPhone", style = MaterialTheme.typography.bodyMedium, color = Color.Black.copy(alpha = 0.6f))
+                Text("Номер: $clinicPhone", style = MaterialTheme.typography.bodyMedium, color = Color.Black.copy(alpha = 0.6f))
                 Text("Рабочее время: $clinicWorkingTime", style = MaterialTheme.typography.bodyMedium, color = Color.Black.copy(alpha = 0.6f))
             }
         }

@@ -11,4 +11,5 @@ interface DoctorRepository {
     suspend fun bookAppointment(request: AppointmentRequest): Boolean
     suspend fun getUserRecords(): List<RecordInfo>
     suspend fun getClinicByName(query: String): List<Clinic>
+    suspend fun getAllClinics(): List<Clinic>
 }

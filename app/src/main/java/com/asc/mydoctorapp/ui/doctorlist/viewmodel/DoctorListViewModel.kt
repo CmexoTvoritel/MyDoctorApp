@@ -1,6 +1,7 @@
 package com.asc.mydoctorapp.ui.doctorlist.viewmodel
 
 import com.asc.mydoctorapp.R
+import com.asc.mydoctorapp.core.domain.usecase.GetClinicByQueryUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorsUseCase
 import com.asc.mydoctorapp.ui.doctorlist.model.DoctorUIItem
 import com.asc.mydoctorapp.ui.doctorlist.viewmodel.model.DoctorAction
@@ -13,14 +14,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DoctorListViewModel @Inject constructor(
-    private val getDoctorsUseCase: GetDoctorsUseCase
+    private val getDoctorsUseCase: GetDoctorsUseCase,
+    private val getClinicByQueryUseCase: GetClinicByQueryUseCase
 ): BaseSharedViewModel<DoctorUIState, DoctorAction, DoctorEvent>(
-    initialState = DoctorUIState(emptyList())
+    initialState = DoctorUIState(isLoading = true)
 ) {
     
     private fun loadDoctors(clinicName: String) {
         viewModelScope.launch {
+            updateViewState { state ->
+                state.copy(isLoading = true)
+            }
+            
             try {
+                val clinic = getClinicByQueryUseCase(clinicName)
                 val doctors = getDoctorsUseCase(clinicName).map { doctor ->
                     DoctorUIItem(
                         id = doctor.email,
@@ -34,11 +41,17 @@ class DoctorListViewModel @Inject constructor(
                 }
                 
                 updateViewState { state ->
-                    state.copy(doctorList = doctors)
+                    state.copy(
+                        isLoading = false,
+                        doctorList = doctors,
+                        clinic = clinic.firstOrNull()
+                    )
                 }
             } catch (e: Exception) {
                 // Обработка ошибок загрузки
-                // Можно добавить состояние ошибки в DoctorUIState если нужно
+                updateViewState { state ->
+                    state.copy(isLoading = false)
+                }
             }
         }
     }

@@ -45,8 +45,8 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.navigation.AppRoutes
+import com.asc.mydoctorapp.ui.home.components.ClinicMainCard
 import com.asc.mydoctorapp.ui.home.components.ClinicSearchCard
-import com.asc.mydoctorapp.ui.home.components.DoctorCard
 import com.asc.mydoctorapp.ui.home.viewmodel.HomeViewModel
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeAction
 import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeEvent
@@ -67,7 +67,6 @@ fun HomeScreen(
             when (action) {
                 is HomeAction.NavigateToChat -> navigateTo(action.route)
                 is HomeAction.NavigateToDoctorProfile -> {
-                    // Формируем маршрут с email доктора
                     val route = AppRoutes.DoctorDetails.route
                         .replace("{doctorEmail}", action.doctorEmail)
                         .replace("{clinicName}", "Clinic1")
@@ -85,7 +84,6 @@ fun HomeScreen(
             .fillMaxSize()
             .background(color = Color.White)
             .verticalScroll(scrollState)
-            //.padding(horizontal = 24.dp)
     ) {
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -215,7 +213,7 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Специалисты для Вас",
+                    text = "Клиники для Вас",
                     style = TextStyle(
                         fontWeight = FontWeight.Normal,
                         fontSize = 16.sp,
@@ -226,7 +224,7 @@ fun HomeScreen(
                 Icon(
                     modifier = Modifier.size(22.dp),
                     imageVector = Icons.Rounded.ArrowForward,
-                    contentDescription = "Смотреть всех специалистов",
+                    contentDescription = "Смотреть все клиники",
                     tint = TealColor
                 )
             }
@@ -237,22 +235,29 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(horizontal = 24.dp)
             ) {
-                items(state?.doctors ?: emptyList()) { doctor ->
-                    DoctorCard(
-                        doctor = doctor,
-                        isFavorite = state?.favorites?.contains(doctor.id) ?: false,
-                        onDoctorClick = { doctorId ->
-                            viewModel.obtainEvent(HomeEvent.OnDoctorCardClick(doctorId))
-                        },
-                        onFavoriteToggle = { doctorId, isFavorite ->
-                            viewModel.obtainEvent(
-                                HomeEvent.OnDoctorFavoriteToggle(
-                                    doctorId,
-                                    isFavorite
-                                )
-                            )
-                        }
-                    )
+                items(state?.clinicsMain ?: emptyList()) { clinic ->
+                    ClinicMainCard(
+                        clinicInfo = clinic
+                    ) {
+                        viewModel.obtainEvent(HomeEvent.OnClinicCardClick(
+                            clinicName = clinic.name ?: "Clinic1"
+                        ))
+                    }
+//                    DoctorCard(
+//                        doctor = doctor,
+//                        isFavorite = state?.favorites?.contains(doctor.id) ?: false,
+//                        onDoctorClick = { doctorId ->
+//                            viewModel.obtainEvent(HomeEvent.OnDoctorCardClick(doctorId))
+//                        },
+//                        onFavoriteToggle = { doctorId, isFavorite ->
+//                            viewModel.obtainEvent(
+//                                HomeEvent.OnDoctorFavoriteToggle(
+//                                    doctorId,
+//                                    isFavorite
+//                                )
+//                            )
+//                        }
+//                    )
                 }
             }
 
