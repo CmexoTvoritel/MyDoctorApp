@@ -46,7 +46,7 @@ fun DoctorListScreen(
             when (action) {
                 is DoctorAction.NavigateToDoctorDetails -> {
                     // Формируем маршрут с email доктора
-                    val route = AppRoutes.DoctorDetails.route.replace("{doctorEmail}", action.doctorEmail)
+                    val route = AppRoutes.DoctorDetails.route.replace("{doctorEmail}", action.doctorEmail).replace("{clinicName}", clinicName)
                     onNavigateToScreen(route)
                 }
                 is DoctorAction.NavigateBack -> {

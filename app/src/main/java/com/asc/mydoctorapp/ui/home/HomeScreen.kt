@@ -68,7 +68,9 @@ fun HomeScreen(
                 is HomeAction.NavigateToChat -> navigateTo(action.route)
                 is HomeAction.NavigateToDoctorProfile -> {
                     // Формируем маршрут с email доктора
-                    val route = AppRoutes.DoctorDetails.route.replace("{doctorEmail}", action.doctorEmail)
+                    val route = AppRoutes.DoctorDetails.route
+                        .replace("{doctorEmail}", action.doctorEmail)
+                        .replace("{clinicName}", "Clinic1")
                     navigateTo(route)
                 }
                 is HomeAction.NavigateToSpecialistsList -> navigateTo(action.route)

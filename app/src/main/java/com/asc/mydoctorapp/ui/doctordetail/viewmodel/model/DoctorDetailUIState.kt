@@ -38,7 +38,7 @@ sealed interface DoctorDetailEvent {
     data object OnBookClick : DoctorDetailEvent
     data object OnSupportClick : DoctorDetailEvent
     data class OnReviewClick(val id: String) : DoctorDetailEvent
-    data class LoadDoctor(val email: String) : DoctorDetailEvent
+    data class LoadDoctor(val email: String, val clinicName: String) : DoctorDetailEvent
 }
 
 sealed interface DoctorDetailAction {

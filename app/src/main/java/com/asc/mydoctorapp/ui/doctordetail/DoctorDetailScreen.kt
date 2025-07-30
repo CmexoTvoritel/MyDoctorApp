@@ -63,14 +63,15 @@ import com.google.android.material.progressindicator.CircularProgressIndicator
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DoctorDetailScreen(
+    clinicName: String,
     doctorEmail: String,
     onNavigateToScreen: (String) -> Unit,
     onNavigateBack: () -> Unit
 ) {
     val viewModel: DoctorDetailViewModel = hiltViewModel()
     // Инициализируем загрузку данных о докторе
-    LaunchedEffect(doctorEmail) {
-        viewModel.obtainEvent(DoctorDetailEvent.LoadDoctor(doctorEmail))
+    LaunchedEffect(doctorEmail, clinicName) {
+        viewModel.obtainEvent(DoctorDetailEvent.LoadDoctor(doctorEmail, clinicName))
     }
     
     val state by viewModel.viewStates().collectAsState()
@@ -79,7 +80,7 @@ fun DoctorDetailScreen(
         when (action) {
             is DoctorDetailAction.NavigateBack -> onNavigateBack()
             is DoctorDetailAction.NavigateToBooking -> {
-                val route = AppRoutes.DoctorRecord.route.replace("{doctorEmail}", action.doctorEmail)
+                val route = AppRoutes.DoctorRecord.route.replace("{doctorEmail}", action.doctorEmail).replace("{clinicName}", clinicName)
                 onNavigateToScreen(route)
             }
             is DoctorDetailAction.NavigateToSupport -> {}

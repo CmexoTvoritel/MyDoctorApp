@@ -9,19 +9,12 @@ import java.util.Locale
 data class FinishRecordUIState(
     val date: LocalDate? = null,
     val time: LocalTime? = null,
-    val address: String = "Ул Вавилова, дом 15",
-    val clinicName: String = "Клиника \"Здоровье\""
+    val appointmentInfo: String = "",
+    val address: String = "",
+    val clinicName: String = ""
 ) {
     fun getFormattedDateTime(): String {
-        val dateFormatter = DateTimeFormatter.ofPattern("dd")
-        val monthName = date?.month?.getDisplayName(TextStyle.FULL, Locale("ru"))
-        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-        
-        return if (date != null && time != null) {
-            "${date.format(dateFormatter)} $monthName, ${time.format(timeFormatter)}"
-        } else {
-            ""
-        }
+        return appointmentInfo
     }
 }
 

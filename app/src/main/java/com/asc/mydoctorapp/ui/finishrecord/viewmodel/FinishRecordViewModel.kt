@@ -14,9 +14,18 @@ class FinishRecordViewModel @Inject constructor() : BaseSharedViewModel<FinishRe
     initialState = FinishRecordUIState()
 ) {
 
-    fun setAppointmentDetails(date: LocalDate, time: LocalTime) {
+    fun setAppointmentDetails(
+        appointmentInfo: String,
+        clinicName: String,
+        clinicAddress: String,
+        date: LocalDate, 
+        time: LocalTime
+    ) {
         updateViewState { state ->
             state.copy(
+                appointmentInfo = appointmentInfo,
+                clinicName = clinicName,
+                address = clinicAddress,
                 date = date,
                 time = time
             )

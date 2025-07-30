@@ -18,13 +18,13 @@ fun TokenDto.toDomain(): UserToken {
     return UserToken(value = token)
 }
 
-fun DoctorDto.toDomain(): Doctor {
+fun DoctorDto.toDomain(clinicName: String): Doctor {
     return Doctor(
         name = name ?: "",
         surname = surname ?: "",
         specialty = speciality ?: "Врач",
         email = email ?: "",
-        clinic = "Clinic1",
+        clinic = clinicName,
         workingDays = workingDays
     )
 }

@@ -28,7 +28,7 @@ class DoctorRepositoryImpl @Inject constructor(
 
     override suspend fun getDoctors(clinicName: String): List<Doctor> {
         if (!doctorCache[clinicName].isNullOrEmpty()) {
-            return doctorCache[clinicName]!!.map { it.toDomain() }
+            return doctorCache[clinicName]!!.map { it.toDomain(clinicName) }
         }
         
         // Иначе загружаем с сервера
@@ -42,7 +42,7 @@ class DoctorRepositoryImpl @Inject constructor(
             if (response.isSuccessful) {
                 val doctorsInitial = response.body()
                 doctorCache += (clinicName to (doctorsInitial ?: emptyList()))
-                val doctors = doctorsInitial?.map { it.toDomain() } ?: emptyList()
+                val doctors = doctorsInitial?.map { it.toDomain(clinicName) } ?: emptyList()
                 doctors
             } else {
                 throw AppException("Failed to get doctors: ${response.errorBody()?.string()}")
@@ -52,16 +52,14 @@ class DoctorRepositoryImpl @Inject constructor(
         }
     }
     
-    override suspend fun getDoctorByEmail(email: String): Doctor {
-        val cachedDoctor = doctorCache.values.flatten().find { it.email == email }
-        if (cachedDoctor != null) {
-            return cachedDoctor.toDomain()
-        }
+    override suspend fun getDoctorByEmail(email: String, clinicName: String): Doctor {
+        doctorCache[clinicName]
+            ?.firstOrNull { it.email == email }
+            ?.let { return it.toDomain(clinicName) }
 
-        val doctors = getDoctors("Clinic1")
-
-        return doctors.find { it.email == email }
-            ?: throw AppException("Doctor with email $email not found")
+        val doctors = getDoctors(clinicName)
+        return doctors.firstOrNull { it.email == email }
+            ?: throw AppException("Doctor with email $email not found in clinic $clinicName")
     }
 
     override suspend fun bookAppointment(request: AppointmentRequest): Boolean {

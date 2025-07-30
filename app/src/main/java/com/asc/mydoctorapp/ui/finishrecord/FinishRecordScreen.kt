@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -40,19 +39,30 @@ import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.ui.finishrecord.model.FinishRecordAction
 import com.asc.mydoctorapp.ui.finishrecord.model.FinishRecordEvent
 import com.asc.mydoctorapp.ui.finishrecord.viewmodel.FinishRecordViewModel
+import java.net.URLDecoder
 import java.time.LocalDate
 import java.time.LocalTime
 
 @Composable
 fun FinishRecordScreen(
+    appointmentInfo: String,
+    clinicName: String, 
+    clinicAddress: String,
     date: LocalDate,
     time: LocalTime,
     onNavigateToMain: () -> Unit,
 ) {
     val viewModel: FinishRecordViewModel = hiltViewModel()
     val state by viewModel.viewStates().collectAsState()
-    LaunchedEffect(date, time) {
-        viewModel.setAppointmentDetails(date, time)
+    
+    LaunchedEffect(appointmentInfo, clinicName, clinicAddress, date, time) {
+        viewModel.setAppointmentDetails(
+            appointmentInfo = URLDecoder.decode(appointmentInfo, "UTF-8"),
+            clinicName = URLDecoder.decode(clinicName, "UTF-8"),
+            clinicAddress = URLDecoder.decode(clinicAddress, "UTF-8"),
+            date = date,
+            time = time
+        )
     }
     
     // Наблюдение за действиями
@@ -80,7 +90,7 @@ fun FinishRecordScreen(
         
         // Верхний текстовый блок
         Text(
-            text = "Вы записаны на приём!",
+            text = "Ожидайте подтверждения",
             style = TextStyle(
                 fontSize = 22.sp
             ),
@@ -89,7 +99,7 @@ fun FinishRecordScreen(
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Не забудьте:",
+            text = "запрос отправлен в клинику:",
             style = TextStyle(
                 fontSize = 20.sp
             ),
@@ -101,15 +111,15 @@ fun FinishRecordScreen(
         Spacer(modifier = Modifier.height(24.dp))
         
         // Список напоминаний
-        BulletPoint(text = state?.getFormattedDateTime() ?: "", accentColor = accentColor)
+        BulletPoint(text = "Клиника: ${state?.clinicName}", accentColor = accentColor)
         
         Spacer(modifier = Modifier.height(24.dp))
-        
-        BulletPoint(text = state?.address ?: "", accentColor = accentColor)
+
+        BulletPoint(text = "Дата: ${state?.getFormattedDateTime()}", accentColor = accentColor)
         
         Spacer(modifier = Modifier.height(24.dp))
-        
-        BulletPoint(text = state?.clinicName ?: "", accentColor = accentColor)
+
+        BulletPoint(text = "Адрес: ${state?.address}", accentColor = accentColor)
         
         Spacer(modifier = Modifier.height(32.dp))
         
@@ -141,7 +151,7 @@ fun FinishRecordScreen(
                 .height(56.dp)
         ) {
             Text(
-                text = "На главную",
+                text = "К записям",
                 style = TextStyle(
                     fontSize = 20.sp,
                     color = Color.White

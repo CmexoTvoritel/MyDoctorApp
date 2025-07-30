@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -43,12 +44,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import android.widget.Toast
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordAction
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordEvent
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordUIState
@@ -64,27 +67,40 @@ import java.util.Locale
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DoctorRecordScreen(
+    clinicName: String,
     doctorEmail: String,
     onNavigateBack: () -> Unit = {},
-    onNavigateToConfirmation: (LocalDate, LocalTime) -> Unit = { _, _ -> }
+    onNavigateToConfirmation: (String, String, String) -> Unit = { _, _, _ -> }
 ) {
     val viewModel: DoctorRecordViewModel = hiltViewModel()
     val state by viewModel.viewStates().collectAsState()
+    val context = LocalContext.current
 
-    LaunchedEffect(doctorEmail) {
-        viewModel.obtainEvent(viewEvent = DoctorRecordEvent.LoadDoctor(doctorEmail))
+    LaunchedEffect(doctorEmail, clinicName) {
+        viewModel.obtainEvent(viewEvent = DoctorRecordEvent.LoadDoctor(doctorEmail, clinicName))
     }
     
     viewModel.viewActions().collectAsState(initial = null).value?.let { action ->
         when (action) {
             is DoctorRecordAction.NavigateBack -> onNavigateBack()
             is DoctorRecordAction.NavigateToConfirmation ->
-                onNavigateToConfirmation(action.date, action.time)
+                onNavigateToConfirmation(action.appointmentInfo, action.clinicName, action.clinicAddress)
+            is DoctorRecordAction.ShowError -> {
+                LaunchedEffect(Unit) {
+                    Toast.makeText(
+                        context,
+                        "Произошла ошибка при записи. Попробуйте позже",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    viewModel.obtainEvent(DoctorRecordEvent.OnErrorShown)
+                }
+            }
         }
     }
     
     val accentColor = Color(0xFF43B3AE)
     val disabledColor = Color(0xFFBDBDBD)
+    val isUIEnabled = state?.isLoading != true
     
     Column(
         modifier = Modifier
@@ -98,7 +114,11 @@ fun DoctorRecordScreen(
             modifier = Modifier
                 .padding(start = 24.dp, top = 16.dp, bottom = 8.dp)
                 .size(24.dp)
-                .clickable { viewModel.obtainEvent(DoctorRecordEvent.OnBackClick) }
+                .clickable(enabled = isUIEnabled) { 
+                    if (isUIEnabled) {
+                        viewModel.obtainEvent(DoctorRecordEvent.OnBackClick) 
+                    }
+                }
         )
         
         // Прокручиваемый контент
@@ -124,9 +144,22 @@ fun DoctorRecordScreen(
                 selectedDate = state?.selectedDate,
                 availableDates = state?.availableDates ?: emptySet(),
                 accentColor = accentColor,
-                onPrevMonth = { viewModel.obtainEvent(DoctorRecordEvent.OnPrevMonth) },
-                onNextMonth = { viewModel.obtainEvent(DoctorRecordEvent.OnNextMonth) },
-                onDateSelected = { viewModel.obtainEvent(DoctorRecordEvent.OnDateSelected(it)) }
+                isEnabled = isUIEnabled,
+                onPrevMonth = { 
+                    if (isUIEnabled) {
+                        viewModel.obtainEvent(DoctorRecordEvent.OnPrevMonth) 
+                    }
+                },
+                onNextMonth = { 
+                    if (isUIEnabled) {
+                        viewModel.obtainEvent(DoctorRecordEvent.OnNextMonth) 
+                    }
+                },
+                onDateSelected = { 
+                    if (isUIEnabled) {
+                        viewModel.obtainEvent(DoctorRecordEvent.OnDateSelected(it)) 
+                    }
+                }
             )
             
             Spacer(modifier = Modifier.height(24.dp))
@@ -156,8 +189,13 @@ fun DoctorRecordScreen(
                                 time = time,
                                 isSelected = isSelected,
                                 accentColor = accentColor,
+                                isEnabled = isUIEnabled,
                                 modifier = Modifier.weight(1f, fill = false),
-                                onClick = { viewModel.obtainEvent(DoctorRecordEvent.OnTimeSelected(time)) }
+                                onClick = { 
+                                    if (isUIEnabled) {
+                                        viewModel.obtainEvent(DoctorRecordEvent.OnTimeSelected(time)) 
+                                    }
+                                }
                             )
                         }
                     }
@@ -166,18 +204,18 @@ fun DoctorRecordScreen(
             
             Spacer(modifier = Modifier.weight(1f))
             
-            // Кнопка Далее
+            // Кнопка записаться
             Button(
                 onClick = {
-                    if (state?.canContinue == true && state?.selectedDate != null && state?.selectedTime != null) {
+                    if (state?.canContinue == true && state?.selectedDate != null && state?.selectedTime != null && isUIEnabled) {
                         viewModel.obtainEvent(DoctorRecordEvent.OnContinueClick(
                             state?.selectedDate ?: LocalDate.now(), state?.selectedTime ?: LocalTime.now()
                         ))
                     }
                 },
-                enabled = state?.canContinue ?: true,
+                enabled = (state?.canContinue == true) && isUIEnabled,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (state?.canContinue == true) accentColor else disabledColor,
+                    containerColor = if ((state?.canContinue == true) && isUIEnabled) accentColor else disabledColor,
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(12.dp),
@@ -186,12 +224,20 @@ fun DoctorRecordScreen(
                     .height(65.dp)
                     .padding(vertical = 8.dp)
             ) {
-                Text(
-                    text = "Далее",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontSize = 20.sp
+                if (state?.isLoading == true) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
                     )
-                )
+                } else {
+                    Text(
+                        text = "Записаться",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 20.sp
+                        )
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -205,6 +251,7 @@ fun CalendarView(
     selectedDate: LocalDate?,
     availableDates: Set<LocalDate>,
     accentColor: Color,
+    isEnabled: Boolean,
     onPrevMonth: () -> Unit,
     onNextMonth: () -> Unit,
     onDateSelected: (LocalDate) -> Unit
@@ -228,7 +275,7 @@ fun CalendarView(
                     .size(32.dp)
                     .clip(CircleShape)
                     .border(1.dp, accentColor, CircleShape)
-                    .clickable { onPrevMonth() }
+                    .clickable(enabled = isEnabled) { onPrevMonth() }
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
@@ -252,7 +299,7 @@ fun CalendarView(
                     .size(32.dp)
                     .clip(CircleShape)
                     .border(1.dp, accentColor, CircleShape)
-                    .clickable { onNextMonth() }
+                    .clickable(enabled = isEnabled) { onNextMonth() }
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
@@ -325,7 +372,7 @@ fun CalendarView(
                                 }
                             )
                             .clickable(
-                                enabled = isCurrentMonth && isAvailable,
+                                enabled = isEnabled && isCurrentMonth && isAvailable,
                                 onClick = { onDateSelected(date) }
                             )
                     ) {
@@ -355,6 +402,7 @@ fun TimeSlotItem(
     time: LocalTime,
     isSelected: Boolean,
     accentColor: Color,
+    isEnabled: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
@@ -365,7 +413,7 @@ fun TimeSlotItem(
         color = Color.White,
         border = BorderStroke(1.dp, accentColor),
         modifier = modifier
-            .clickable(onClick = onClick)
+            .clickable(enabled = isEnabled, onClick = onClick)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

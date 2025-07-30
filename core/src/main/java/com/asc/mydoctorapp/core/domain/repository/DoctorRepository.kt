@@ -7,7 +7,7 @@ import com.asc.mydoctorapp.core.domain.model.RecordInfo
 
 interface DoctorRepository {
     suspend fun getDoctors(clinicName: String): List<Doctor>
-    suspend fun getDoctorByEmail(email: String): Doctor
+    suspend fun getDoctorByEmail(email: String, clinicName: String): Doctor
     suspend fun bookAppointment(request: AppointmentRequest): Boolean
     suspend fun getUserRecords(): List<RecordInfo>
     suspend fun getClinicByName(query: String): List<Clinic>

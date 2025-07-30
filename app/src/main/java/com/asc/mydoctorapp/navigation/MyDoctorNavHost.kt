@@ -30,6 +30,7 @@ import com.asc.mydoctorapp.ui.registration.RegistrationScreen
 import com.asc.mydoctorapp.ui.reviews.ReviewsScreen
 import com.asc.mydoctorapp.ui.settings.SettingsScreen
 import com.asc.mydoctorapp.ui.splash.SplashScreen
+import java.net.URLEncoder
 import java.time.LocalDate
 import java.time.LocalTime
 
@@ -67,10 +68,10 @@ enum class AppRoutes(val route: String) {
     Registration("registration"),
     Home("home"),
     DoctorList("home/doctorList/{clinicName}"),
-    DoctorDetails("home/doctorDetails/{doctorEmail}"),
+    DoctorDetails("home/doctorDetails/{doctorEmail}/{clinicName}"),
     ReviewsList("home/reviewsList/{isMyReviews}"),
-    DoctorRecord("home/doctorRecord/{doctorEmail}"),
-    FinishRecord("home/DoctorRecord"),
+    DoctorRecord("home/doctorRecord/{doctorEmail}/{clinicName}"),
+    FinishRecord("home/finishRecord/{appointmentInfo}/{clinicName}/{clinicAddress}"),
     Chat("chat"),
     ChatDetails("chat/details"),
     Records("records"),
@@ -210,10 +211,17 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
                     type = NavType.StringType
                     nullable = false
                 }
+                ,
+                navArgument("clinicName") {
+                    type = NavType.StringType
+                    nullable = false
+                }
             )
         ) { backStackEntry ->
             val doctorEmail = backStackEntry.arguments?.getString("doctorEmail") ?: ""
+            val clinicName = backStackEntry.arguments?.getString("clinicName") ?: "Clinic1"
             DoctorDetailScreen(
+                clinicName = clinicName,
                 doctorEmail = doctorEmail,
                 onNavigateToScreen = { route ->
                     navController.navigate(route)
@@ -230,25 +238,57 @@ private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
                     type = NavType.StringType
                     nullable = false
                 }
+                ,
+                navArgument("clinicName") {
+                    type = NavType.StringType
+                    nullable = false
+                }
             )
         ) { backStackEntry ->
             val doctorEmail = backStackEntry.arguments?.getString("doctorEmail") ?: ""
+            val clinicName = backStackEntry.arguments?.getString("clinicName") ?: "Clinic1"
             DoctorRecordScreen(
+                clinicName = clinicName,
                 doctorEmail = doctorEmail,
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onNavigateToConfirmation = { date, time ->
-                    navController.navigate(AppRoutes.FinishRecord.route)
+                onNavigateToConfirmation = { appointmentInfo, clinicName, clinicAddress ->
+                    val encodedAppointmentInfo = URLEncoder.encode(appointmentInfo, "UTF-8")
+                    val encodedClinicName = URLEncoder.encode(clinicName, "UTF-8")
+                    val encodedClinicAddress = URLEncoder.encode(clinicAddress, "UTF-8")
+                    navController.navigate("home/finishRecord/$encodedAppointmentInfo/$encodedClinicName/$encodedClinicAddress")
                 }
             )
         }
-        composable(route = AppRoutes.FinishRecord.route) {
+        composable(
+            route = AppRoutes.FinishRecord.route,
+            arguments = listOf(
+                navArgument("appointmentInfo") {
+                    type = NavType.StringType
+                    nullable = false
+                },
+                navArgument("clinicName") {
+                    type = NavType.StringType
+                    nullable = false
+                },
+                navArgument("clinicAddress") {
+                    type = NavType.StringType
+                    nullable = false
+                }
+            )
+        ) { backStackEntry ->
+            val appointmentInfo = backStackEntry.arguments?.getString("appointmentInfo") ?: ""
+            val clinicName = backStackEntry.arguments?.getString("clinicName") ?: ""
+            val clinicAddress = backStackEntry.arguments?.getString("clinicAddress") ?: ""
             FinishRecordScreen(
+                appointmentInfo = appointmentInfo,
+                clinicName = clinicName,
+                clinicAddress = clinicAddress,
                 date = LocalDate.now(),
                 time = LocalTime.now(),
                 onNavigateToMain = {
-                    navController.navigate(AppRoutes.Home.route)
+                    navController.navigate(AppRoutes.Records.route)
                 }
             )
         }

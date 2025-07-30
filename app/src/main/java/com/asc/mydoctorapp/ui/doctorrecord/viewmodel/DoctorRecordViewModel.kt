@@ -6,6 +6,7 @@ import com.asc.mydoctorapp.core.domain.model.AppointmentRequest
 import com.asc.mydoctorapp.core.domain.model.Doctor
 import com.asc.mydoctorapp.core.domain.model.UserToken
 import com.asc.mydoctorapp.core.domain.usecase.BookAppointmentUseCase
+import com.asc.mydoctorapp.core.domain.usecase.GetClinicByQueryUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorByEmailUseCase
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordAction
@@ -19,13 +20,15 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import javax.inject.Inject
 
 @HiltViewModel
 class DoctorRecordViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val getDoctorByEmailUseCase: GetDoctorByEmailUseCase,
-    private val bookAppointmentUseCase: BookAppointmentUseCase
+    private val bookAppointmentUseCase: BookAppointmentUseCase,
+    private val getClinicByQueryUseCase: GetClinicByQueryUseCase
 ) : BaseSharedViewModel<DoctorRecordUIState, DoctorRecordAction, DoctorRecordEvent>(
     initialState = DoctorRecordUIState(
         displayedMonth = YearMonth.now(),
@@ -40,7 +43,7 @@ class DoctorRecordViewModel @Inject constructor(
         val start = LocalTime.parse(startStr.trim(), formatter)
         val end   = LocalTime.parse(endStr.trim(), formatter)
         return generateSequence(start) { it.plusHours(1) }
-            .takeWhile { it < end }       // последняя не включается, как в примере
+            .takeWhile { it < end }
             .toList()
     }
 
@@ -52,14 +55,17 @@ class DoctorRecordViewModel @Inject constructor(
             is DoctorRecordEvent.OnDateSelected -> selectDate(viewEvent.date)
             is DoctorRecordEvent.OnTimeSelected -> selectTime(viewEvent.time)
             is DoctorRecordEvent.OnContinueClick -> continueClicked()
-            is DoctorRecordEvent.LoadDoctor -> loadDoctorInfo(viewEvent.email)
+            is DoctorRecordEvent.LoadDoctor -> loadDoctorInfo(viewEvent.email, viewEvent.clinicName)
+            is DoctorRecordEvent.OnErrorShown -> {
+                updateViewState { it.copy(hasError = false) }
+            }
         }
     }
 
-    private fun loadDoctorInfo(email: String) {
+    private fun loadDoctorInfo(email: String, clinicName: String) {
         viewModelScope.launch {
             try {
-                val doctor = getDoctorByEmailUseCase(email)
+                val doctor = getDoctorByEmailUseCase(email, clinicName)
                 doctorInfo = doctor
                 updateViewState { s ->
                     val month = YearMonth.now()
@@ -88,7 +94,6 @@ class DoctorRecordViewModel @Inject constructor(
             it.copy(
                 displayedMonth = newMonth,
                 availableDates = generateAvailableDates(newMonth, it.workingDays),
-                // сбрасываем выбор при смене месяца
                 selectedDate = null,
                 selectedTime = null,
                 availableTimeSlots = emptyList(),
@@ -137,6 +142,9 @@ class DoctorRecordViewModel @Inject constructor(
             if (viewStates().value?.canContinue == true) {
                 val date = viewStates().value?.selectedDate!!
                 val time = viewStates().value?.selectedTime!!
+
+                updateViewState { it.copy(isLoading = true, hasError = false) }
+
                 try {
                     val answer = bookAppointmentUseCase.invoke(request = AppointmentRequest(
                         doctorEmail = doctorInfo?.email ?: "",
@@ -147,11 +155,34 @@ class DoctorRecordViewModel @Inject constructor(
                         hour = time.hour.toString(),
                         minutes = time.minute.toString()
                     ))
+
                     if (answer) {
-                        sendViewAction(DoctorRecordAction.NavigateToConfirmation(date, time))
+                        val clinicName = doctorInfo?.clinic ?: ""
+                        val clinics = getClinicByQueryUseCase.invoke("")
+                        val clinic = clinics.find { it.name == clinicName }
+                        val clinicAddress = clinic?.address ?: ""
+
+                        // Форматируем дату и время для передачи
+                        val monthName = date.month.getDisplayName(
+                            java.time.format.TextStyle.FULL,
+                            Locale("ru")
+                        )
+                        val appointmentInfo = "${date.dayOfMonth} $monthName ${String.format("%02d:%02d", time.hour, time.minute)}"
+
+                        updateViewState { it.copy(isLoading = false) }
+                        sendViewAction(DoctorRecordAction.NavigateToConfirmation(
+                            appointmentInfo = appointmentInfo,
+                            clinicName = clinicName,
+                            clinicAddress = clinicAddress
+                        ))
+                    } else {
+                        updateViewState { it.copy(isLoading = false, hasError = true) }
+                        sendViewAction(DoctorRecordAction.ShowError)
                     }
                 } catch (e: Exception) {
                     Log.e("DoctorRecordViewModel", "Error creating record", e)
+                    updateViewState { it.copy(isLoading = false, hasError = true) }
+                    sendViewAction(DoctorRecordAction.ShowError)
                 }
             }
         }

@@ -7,7 +7,7 @@ import javax.inject.Inject
 class GetDoctorByEmailUseCase @Inject constructor(
     private val doctorRepository: DoctorRepository
 ) {
-    suspend operator fun invoke(email: String): Doctor {
-        return doctorRepository.getDoctorByEmail(email)
+    suspend operator fun invoke(email: String, clinicName: String): Doctor {
+        return doctorRepository.getDoctorByEmail(email, clinicName)
     }
 }

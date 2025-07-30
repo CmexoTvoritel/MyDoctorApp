@@ -2,6 +2,7 @@ package com.asc.mydoctorapp.ui.doctordetail.viewmodel
 
 import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.core.data.remote.WorkingDays
+import com.asc.mydoctorapp.core.domain.usecase.GetClinicByQueryUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorByEmailUseCase
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.ClinicInfo
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.DoctorDetailAction
@@ -16,7 +17,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DoctorDetailViewModel @Inject constructor(
-    private val getDoctorByEmailUseCase: GetDoctorByEmailUseCase
+    private val getDoctorByEmailUseCase: GetDoctorByEmailUseCase,
+    private val getClinicByQueryUseCase: GetClinicByQueryUseCase
 ) : BaseSharedViewModel<DoctorDetailUIState, DoctorDetailAction, DoctorDetailEvent>(
     initialState = DoctorDetailUIState(
         isLoading = true
@@ -62,17 +64,17 @@ class DoctorDetailViewModel @Inject constructor(
                 sendViewAction(DoctorDetailAction.NavigateToReviewDetail(viewEvent.id))
             }
             is DoctorDetailEvent.LoadDoctor -> {
-                loadDoctorByEmail(viewEvent.email)
+                loadDoctorByEmail(viewEvent.email, viewEvent.clinicName)
             }
         }
     }
 
-    private fun loadDoctorByEmail(email: String) {
+    private fun loadDoctorByEmail(email: String, clinicName: String) {
         updateViewState { it.copy(isLoading = true) }
         
         viewModelScope.launch {
             try {
-                val doctor = getDoctorByEmailUseCase(email)
+                val doctor = getDoctorByEmailUseCase(email, clinicName)
                 
                 // Конвертируем модель Doctor из домена в UI-модель
                 val doctorDetailUi = DoctorDetailUi(
@@ -111,10 +113,12 @@ class DoctorDetailViewModel @Inject constructor(
                         avatarRes = R.drawable.ic_doctor_placeholder
                     )
                 )
-                
+                val clinicApiInfo = getClinicByQueryUseCase(clinicName).find {
+                    it.name == clinicName
+                }
                 val clinicInfo = ClinicInfo(
-                    name = doctor.clinic,
-                    address = "ул. Лесная, 5, Москва",
+                    name = clinicApiInfo?.name ?: "",
+                    address = "Адрес: ${clinicApiInfo?.address}",
                     schedule = doctor.workingDays?.toRuString() ?: ""
                 )
                 
