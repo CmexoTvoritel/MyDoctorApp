@@ -13,7 +13,9 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import javax.inject.Inject
 
 class DoctorRepositoryImpl @Inject constructor(
@@ -86,13 +88,71 @@ class DoctorRepositoryImpl @Inject constructor(
                 ?: throw AppException("Unauthorized. Please login first.")
             val requestBody = formRequestBodyForUserEvents(token)
             val response = apiService.doctorRecords(requestBody)
+            val requestedResponse = apiService.patientRecords(requestBody)
             if (response.isSuccessful) {
-                return (response.body()?.map { it.toDomain() }) ?: emptyList()
+                val confirmedEvents = (response.body()?.map { 
+                    val formattedStart = formatDateTime(it.start)
+                    val formattedEnd = formatDateTime(it.end)
+                    RecordInfo(
+                        start = formattedStart,
+                        end = formattedEnd,
+                        docName = it.docName,
+                        docSurname = it.docSurname,
+                        docSpecialty = it.docSpecialty,
+                        email = it.email,
+                        isConfirmed = true,
+                        clinicName = it.clinicName
+                    )
+                }) ?: emptyList()
+                
+                val requestedEvents = (requestedResponse.body()?.map { 
+                    val formattedStart = formatDateTime(it.start)
+                    val formattedEnd = formatDateTime(it.end)
+                    RecordInfo(
+                        start = formattedStart,
+                        end = formattedEnd,
+                        docName = it.docName,
+                        docSurname = it.docSurname,
+                        docSpecialty = it.docSpecialty,
+                        email = it.email,
+                        isConfirmed = false,
+                        clinicName = it.clinicName
+                    )
+                }) ?: emptyList()
+                
+                // Sort by date - earliest first
+                val allEvents = (confirmedEvents + requestedEvents)
+                return allEvents.sortedBy { parseDateTime(it.start) }
             } else {
                 throw AppException("Failed to get user events: ${response.errorBody()?.string()}")
             }
         } catch (e: Exception) {
             return emptyList()
+        }
+    }
+    
+    private fun formatDateTime(dateTimeString: String?): String {
+        if (dateTimeString.isNullOrEmpty()) return ""
+        
+        return try {
+            // Parse input format: "2025-7-30T14:0:00"
+            val inputFormatter = DateTimeFormatter.ofPattern("yyyy-M-d'T'H:m:ss")
+            val outputFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm")
+            val dateTime = LocalDateTime.parse(dateTimeString, inputFormatter)
+            dateTime.format(outputFormatter)
+        } catch (e: DateTimeParseException) {
+            dateTimeString // Return original if parsing fails
+        }
+    }
+    
+    private fun parseDateTime(dateTimeString: String?): LocalDateTime? {
+        if (dateTimeString.isNullOrEmpty()) return null
+        
+        return try {
+            val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm")
+            LocalDateTime.parse(dateTimeString, formatter)
+        } catch (e: DateTimeParseException) {
+            null
         }
     }
 
@@ -132,8 +192,8 @@ class DoctorRepositoryImpl @Inject constructor(
         token: String
     ): RequestBody {
         val parameters = JSONObject().apply {
-            put("token", token)
             put("doctor_email", request.doctorEmail)
+            put("token", token)
             put("day", request.day)
             put("month", request.month)
             put("year", request.year)

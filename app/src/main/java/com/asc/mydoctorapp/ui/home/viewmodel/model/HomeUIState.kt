@@ -15,7 +15,8 @@ data class HomeUIState(
     val doctors: List<DoctorUi> = emptyList(),
     val clinics: List<Clinic> = emptyList(),
     val favorites: Set<String> = emptySet(),
-    val isSearching: Boolean = false
+    val isSearching: Boolean = false,
+    val isRefreshing: Boolean = false
 )
 
 data class DoctorUi(
@@ -28,6 +29,7 @@ data class DoctorUi(
 )
 
 sealed interface HomeEvent {
+    object OnRefresh : HomeEvent
     data class OnQueryChanged(val text: String) : HomeEvent          // ввод в поиске
     object OnSearchSubmit : HomeEvent                                // тап по иконке поиска
     object OnAiChatStartClick : HomeEvent                            // «Начать» в AI‑карточке

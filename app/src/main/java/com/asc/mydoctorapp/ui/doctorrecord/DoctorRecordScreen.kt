@@ -50,6 +50,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
 import androidx.hilt.navigation.compose.hiltViewModel
 import android.widget.Toast
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordAction
@@ -100,7 +101,7 @@ fun DoctorRecordScreen(
     
     val accentColor = Color(0xFF43B3AE)
     val disabledColor = Color(0xFFBDBDBD)
-    val isUIEnabled = state?.isLoading != true
+    val isUIEnabled = state?.isLoading != true && state?.isLoadingRecords != true
     
     Column(
         modifier = Modifier
@@ -138,65 +139,112 @@ fun DoctorRecordScreen(
                 modifier = Modifier.padding(bottom = 24.dp)
             )
             
-            // Календарь
-            CalendarView(
-                yearMonth = state?.displayedMonth ?: YearMonth.now(),
-                selectedDate = state?.selectedDate,
-                availableDates = state?.availableDates ?: emptySet(),
-                accentColor = accentColor,
-                isEnabled = isUIEnabled,
-                onPrevMonth = { 
-                    if (isUIEnabled) {
-                        viewModel.obtainEvent(DoctorRecordEvent.OnPrevMonth) 
-                    }
-                },
-                onNextMonth = { 
-                    if (isUIEnabled) {
-                        viewModel.obtainEvent(DoctorRecordEvent.OnNextMonth) 
-                    }
-                },
-                onDateSelected = { 
-                    if (isUIEnabled) {
-                        viewModel.obtainEvent(DoctorRecordEvent.OnDateSelected(it)) 
+            // Показываем индикатор загрузки если идет загрузка записей
+            if (state?.isLoadingRecords == true) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(
+                            color = accentColor,
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Загрузка записей...",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray
+                        )
                     }
                 }
-            )
+            } else {
+                // Календарь (показываем только когда записи загружены)
+                CalendarView(
+                    yearMonth = state?.displayedMonth ?: YearMonth.now(),
+                    selectedDate = state?.selectedDate,
+                    availableDates = state?.availableDates ?: emptySet(),
+                    accentColor = accentColor,
+                    isEnabled = isUIEnabled,
+                    onPrevMonth = { 
+                        if (isUIEnabled) {
+                            viewModel.obtainEvent(DoctorRecordEvent.OnPrevMonth) 
+                        }
+                    },
+                    onNextMonth = { 
+                        if (isUIEnabled) {
+                            viewModel.obtainEvent(DoctorRecordEvent.OnNextMonth) 
+                        }
+                    },
+                    onDateSelected = { 
+                        if (isUIEnabled) {
+                            viewModel.obtainEvent(DoctorRecordEvent.OnDateSelected(it)) 
+                        }
+                    }
+                )
+            }
             
             Spacer(modifier = Modifier.height(24.dp))
 
             val timeSlots = state?.availableTimeSlots ?: emptyList()
             val selectedTime = state?.selectedTime
-            // Выбор времени (только если дата выбрана)
-            state?.selectedDate?.let { selectedDate ->
-                if (timeSlots.isNotEmpty()) {
-                    Text(
-                        text = "Выберите время",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 20.sp
-                        ),
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-                    
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        timeSlots.forEach { time ->
-                            val isSelected = selectedTime == time
-                            TimeSlotItem(
-                                time = time,
-                                isSelected = isSelected,
-                                accentColor = accentColor,
-                                isEnabled = isUIEnabled,
-                                modifier = Modifier.weight(1f, fill = false),
-                                onClick = { 
-                                    if (isUIEnabled) {
-                                        viewModel.obtainEvent(DoctorRecordEvent.OnTimeSelected(time)) 
-                                    }
-                                }
+            val isDateBlocked = state?.isDateBlocked ?: false
+            
+            // Выбор времени (только если дата выбрана и записи загружены)
+            if (state?.isLoadingRecords != true) {
+                state?.selectedDate?.let { selectedDate ->
+                    if (isDateBlocked) {
+                        // Показываем сообщение о недоступности записи
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Нет свободного времени записи",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontSize = 18.sp
+                                ),
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.error,
+                                textAlign = TextAlign.Center
                             )
+                        }
+                    } else if (timeSlots.isNotEmpty()) {
+                        Text(
+                            text = "Выберите время",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontSize = 20.sp
+                            ),
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                        
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            timeSlots.forEach { time ->
+                                val isSelected = selectedTime == time
+                                TimeSlotItem(
+                                    time = time,
+                                    isSelected = isSelected,
+                                    accentColor = accentColor,
+                                    isEnabled = isUIEnabled,
+                                    modifier = Modifier.weight(1f, fill = false),
+                                    onClick = { 
+                                        if (isUIEnabled) {
+                                            viewModel.obtainEvent(DoctorRecordEvent.OnTimeSelected(time)) 
+                                        }
+                                    }
+                                )
+                            }
                         }
                     }
                 }

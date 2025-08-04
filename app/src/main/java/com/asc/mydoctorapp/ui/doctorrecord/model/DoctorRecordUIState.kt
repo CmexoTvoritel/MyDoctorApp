@@ -14,7 +14,10 @@ data class DoctorRecordUIState(
     val canContinue: Boolean = false,
     val workingDays: WorkingDays? = null,
     val isLoading: Boolean = false,
-    val hasError: Boolean = false
+    val hasError: Boolean = false,
+    val bookedDates: Set<LocalDate> = emptySet(), 
+    val isDateBlocked: Boolean = false, 
+    val isLoadingRecords: Boolean = false 
 )
 
 sealed interface DoctorRecordEvent {

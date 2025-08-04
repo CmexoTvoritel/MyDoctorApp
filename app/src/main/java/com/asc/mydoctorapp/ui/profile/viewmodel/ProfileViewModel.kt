@@ -50,8 +50,33 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    private fun refreshProfile() {
+        viewModelScope.launch {
+            updateViewState { state ->
+                state.copy(isRefreshing = true)
+            }
+            
+            try {
+                val profileInfo = hardUpdateUserInfo.invoke()
+                updateViewState { state ->
+                    state.copy(
+                        userName = profileInfo.name,
+                        userLogin = profileInfo.login,
+                        userBirth = profileInfo.birth,
+                        isRefreshing = false
+                    )
+                }
+            } catch (e: Exception) {
+                updateViewState { state ->
+                    state.copy(isRefreshing = false)
+                }
+            }
+        }
+    }
+
     override fun obtainEvent(viewEvent: ProfileEvent) {
         when (viewEvent) {
+            is ProfileEvent.OnRefresh -> refreshProfile()
             is ProfileEvent.OnSettingsClick -> navigateToSettings()
             is ProfileEvent.OnFavoritesClick -> navigateToFavorites()
             is ProfileEvent.OnReviewsClick -> navigateToReviews()

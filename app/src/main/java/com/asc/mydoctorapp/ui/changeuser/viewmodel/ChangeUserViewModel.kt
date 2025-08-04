@@ -2,6 +2,7 @@ package com.asc.mydoctorapp.ui.changeuser.viewmodel
 
 import android.util.Patterns
 import com.asc.mydoctorapp.core.domain.usecase.ChangeUserInfoUseCase
+import com.asc.mydoctorapp.core.domain.usecase.RecordsDatabaseUseCase
 import com.asc.mydoctorapp.core.domain.usecase.UserInfoUseCase
 import com.asc.mydoctorapp.ui.changeuser.viewmodel.model.ChangeUserAction
 import com.asc.mydoctorapp.ui.changeuser.viewmodel.model.ChangeUserEvent
@@ -18,14 +19,18 @@ import javax.inject.Inject
 @HiltViewModel
 class ChangeUserViewModel @Inject constructor(
     private val userInfoUseCase: UserInfoUseCase,
-    private val changeUserInfoUseCase: ChangeUserInfoUseCase
+    private val changeUserInfoUseCase: ChangeUserInfoUseCase,
+    private val recordsDatabaseUseCase: RecordsDatabaseUseCase
 ): BaseSharedViewModel<ChangeUserUIState, ChangeUserAction, ChangeUserEvent>(
     initialState = ChangeUserUIState()
 ) {
 
+    private var originalEmail: String = ""
+
     init {
         viewModelScope.launch {
             val userInfo = userInfoUseCase.invoke()
+            originalEmail = userInfo.login ?: ""
             updateViewState { state ->
                 state.copy(
                     name = userInfo.name ?: "",
@@ -115,6 +120,10 @@ class ChangeUserViewModel @Inject constructor(
                 birth = formatDateForServer(currentState.dateOfBirth)
             )
             if (result) {
+                // Обновляем email в базе данных записей если он изменился
+                if (currentState.email != originalEmail) {
+                    recordsDatabaseUseCase.updateUserEmail(originalEmail, currentState.email)
+                }
                 sendViewAction(ChangeUserAction.OnNavigateAfterSave)
             } else {
                 sendViewAction(ChangeUserAction.ShowError("Ошибка при сохранении данных"))

@@ -1,22 +1,16 @@
 package com.asc.mydoctorapp.ui.records.viewmodel.model
 
-enum class RecordsTab { CURRENT, PAST }
+import com.asc.mydoctorapp.core.data.remote.RecordUI
 
-data class RecordUi(
-    val id: String,
-    val doctorName: String,
-    val specialty: String,
-    val time: String,          // «15:00»
-    val address: String,       // «Вавилова, 15»
-    val clinic: String,        // «Клиника "Здоровье"»
-    val photoRes: Int?,        // drawable / URL
-    val isFavorite: Boolean
-)
+enum class RecordsTab { CURRENT, PAST, CANCELLED }
 
 data class RecordsUIState(
+    val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val selectedTab: RecordsTab = RecordsTab.CURRENT,
-    val current: List<RecordUi> = emptyList(),
-    val past: List<RecordUi> = emptyList()
+    val current: List<RecordUI> = emptyList(),
+    val past: List<RecordUI> = emptyList(),
+    val cancelled: List<RecordUI> = emptyList()
 )
 
 sealed interface RecordsEvent {
@@ -24,6 +18,7 @@ sealed interface RecordsEvent {
     data class OnFavoriteToggle(val recordId: String, val newValue: Boolean) : RecordsEvent
     object OnPrimaryButtonClick : RecordsEvent          // «Найти врача…» или «Записаться повторно»
     data class OnRecordClick(val recordId: String) : RecordsEvent
+    object OnRefresh : RecordsEvent                     // Pull to refresh
 }
 
 sealed interface RecordsAction {

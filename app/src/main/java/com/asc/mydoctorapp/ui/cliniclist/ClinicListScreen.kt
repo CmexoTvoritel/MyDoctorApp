@@ -18,9 +18,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,6 +42,7 @@ import com.asc.mydoctorapp.ui.cliniclist.viewmodel.model.ClinicListEvent
 import com.asc.mydoctorapp.ui.doctorlist.viewmodel.model.DoctorEvent
 import com.asc.mydoctorapp.ui.home.components.ClinicSearchCard
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClinicListScreen(
     onClinicClick: (String) -> Unit,
@@ -95,26 +98,44 @@ fun ClinicListScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Content area
-        Box(
+        // Content area with pull-to-refresh
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { viewModel.handleEvent(ClinicListEvent.OnRefresh) },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
         ) {
             when {
                 state.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center),
-                        color = Color(0xFF43B3AE)
-                    )
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color(0xFF43B3AE)
+                        )
+                    }
                 }
                 
                 state.error != null -> {
-                    Text(
-                        text = state.error!!,
-                        color = Color.Red,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 100.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = state.error!!,
+                                    color = Color.Red
+                                )
+                            }
+                        }
+                    }
                 }
                 
                 else -> {

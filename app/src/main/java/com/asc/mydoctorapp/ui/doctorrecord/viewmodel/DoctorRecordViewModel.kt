@@ -8,6 +8,7 @@ import com.asc.mydoctorapp.core.domain.model.UserToken
 import com.asc.mydoctorapp.core.domain.usecase.BookAppointmentUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetClinicByQueryUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorByEmailUseCase
+import com.asc.mydoctorapp.core.domain.usecase.GetUserRecordsUseCase
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordAction
 import com.asc.mydoctorapp.ui.doctorrecord.model.DoctorRecordEvent
@@ -17,9 +18,11 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.Locale
 import javax.inject.Inject
 
@@ -28,7 +31,8 @@ class DoctorRecordViewModel @Inject constructor(
     private val preferencesManager: PreferencesManager,
     private val getDoctorByEmailUseCase: GetDoctorByEmailUseCase,
     private val bookAppointmentUseCase: BookAppointmentUseCase,
-    private val getClinicByQueryUseCase: GetClinicByQueryUseCase
+    private val getClinicByQueryUseCase: GetClinicByQueryUseCase,
+    private val getUserRecordsUseCase: GetUserRecordsUseCase
 ) : BaseSharedViewModel<DoctorRecordUIState, DoctorRecordAction, DoctorRecordEvent>(
     initialState = DoctorRecordUIState(
         displayedMonth = YearMonth.now(),
@@ -36,6 +40,7 @@ class DoctorRecordViewModel @Inject constructor(
     )
 ) {
     private var doctorInfo: Doctor? = null
+    private var doctorEmail: String = ""
 
     private fun parseTimeRange(range: String): List<LocalTime> {
         val (startStr, endStr) = range.split('-')
@@ -67,6 +72,7 @@ class DoctorRecordViewModel @Inject constructor(
             try {
                 val doctor = getDoctorByEmailUseCase(email, clinicName)
                 doctorInfo = doctor
+                doctorEmail = email
                 updateViewState { s ->
                     val month = YearMonth.now()
                     val newDates = generateAvailableDates(month, doctor.workingDays)
@@ -77,9 +83,11 @@ class DoctorRecordViewModel @Inject constructor(
                         availableTimeSlots = emptyList(),
                         selectedDate = null,
                         selectedTime = null,
-                        canContinue = false
+                        canContinue = false,
+                        isLoadingRecords = true // Начинаем загрузку записей
                     )
                 }
+                loadUserRecords()
             } catch (e: Exception) {
                 Log.e("DoctorRecordViewModel", "Error loading doctor info", e)
             }
@@ -97,27 +105,36 @@ class DoctorRecordViewModel @Inject constructor(
                 selectedDate = null,
                 selectedTime = null,
                 availableTimeSlots = emptyList(),
-                canContinue = false
+                canContinue = false,
+                isLoadingRecords = true // Начинаем загрузку записей при смене месяца
             )
         }
+        loadUserRecords()
     }
 
     private fun selectDate(date: LocalDate) {
         val state = viewStates().value ?: return
         if (date !in state.availableDates) return
 
-        val slots = buildList {
-            val wd = state.workingDays ?: return@buildList
-            val rangeStr = when (date.dayOfWeek) {
-                DayOfWeek.MONDAY    -> wd.monday
-                DayOfWeek.TUESDAY   -> wd.tuesday
-                DayOfWeek.WEDNESDAY -> wd.wednesday
-                DayOfWeek.THURSDAY  -> wd.thursday
-                DayOfWeek.FRIDAY    -> wd.friday
-                DayOfWeek.SATURDAY  -> wd.saturday
-                DayOfWeek.SUNDAY    -> wd.sunday
+        // Проверяем, занята ли дата записью к этому врачу
+        val isDateBlocked = date in state.bookedDates
+        
+        val slots = if (isDateBlocked) {
+            emptyList() // Если дата заблокирована, времени нет
+        } else {
+            buildList {
+                val wd = state.workingDays ?: return@buildList
+                val rangeStr = when (date.dayOfWeek) {
+                    DayOfWeek.MONDAY    -> wd.monday
+                    DayOfWeek.TUESDAY   -> wd.tuesday
+                    DayOfWeek.WEDNESDAY -> wd.wednesday
+                    DayOfWeek.THURSDAY  -> wd.thursday
+                    DayOfWeek.FRIDAY    -> wd.friday
+                    DayOfWeek.SATURDAY  -> wd.saturday
+                    DayOfWeek.SUNDAY    -> wd.sunday
+                }
+                if (rangeStr != null) addAll(parseTimeRange(rangeStr))
             }
-            if (rangeStr != null) addAll(parseTimeRange(rangeStr))
         }
 
         updateViewState {
@@ -125,7 +142,8 @@ class DoctorRecordViewModel @Inject constructor(
                 selectedDate = date,
                 selectedTime = null,
                 availableTimeSlots = slots,
-                canContinue = false
+                canContinue = false,
+                isDateBlocked = isDateBlocked
             )
         }
     }
@@ -206,5 +224,43 @@ class DoctorRecordViewModel @Inject constructor(
             .map { month.atDay(it) }
             .filter { it.dayOfWeek in allowedDays && !it.isBefore(today) }
             .toSet()
+    }
+
+    private fun loadUserRecords() {
+        viewModelScope.launch {
+            try {
+                val allRecords = getUserRecordsUseCase.invoke()
+                // Фильтруем записи для текущего врача по email
+                val doctorRecords = allRecords.filter { record ->
+                    record.email == doctorEmail
+                }
+                
+                // Парсим даты записей
+                val bookedDates = mutableSetOf<LocalDate>()
+                val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm")
+                
+                doctorRecords.forEach { record ->
+                    try {
+                        val dateTimeString = record.start
+                        if (!dateTimeString.isNullOrEmpty()) {
+                            // Парсим время из строки формата "dd.MM.yyyy, HH:mm"
+                            val localDateTime = LocalDateTime.parse(dateTimeString, formatter)
+                            bookedDates.add(localDateTime.toLocalDate())
+                        }
+                    } catch (e: DateTimeParseException) {
+                        Log.w("DoctorRecordViewModel", "Failed to parse date: ${record.start}", e)
+                    }
+                }
+                
+                updateViewState { state ->
+                    state.copy(bookedDates = bookedDates, isLoadingRecords = false)
+                }
+            } catch (e: Exception) {
+                Log.e("DoctorRecordViewModel", "Error loading user records", e)
+                updateViewState { state ->
+                    state.copy(isLoadingRecords = false)
+                }
+            }
+        }
     }
 }

@@ -10,4 +10,8 @@ class UserInfoUseCase @Inject constructor(
     suspend operator fun invoke(): UserInfo {
         return authRepository.getUserInfo()
     }
+    
+    suspend fun getUserEmail(): String {
+        return authRepository.getUserInfo().login ?: ""
+    }
 }

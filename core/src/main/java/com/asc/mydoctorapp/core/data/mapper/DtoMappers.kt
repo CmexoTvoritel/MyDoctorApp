@@ -29,14 +29,16 @@ fun DoctorDto.toDomain(clinicName: String): Doctor {
     )
 }
 
-fun RecordDto.toDomain(): RecordInfo {
+fun RecordDto.toDomain(isConfirmed: Boolean): RecordInfo {
     return RecordInfo(
         start = start,
         end = end,
         docName = docName,
         docSurname = docSurname,
         docSpecialty = docSpecialty,
-        email = email
+        email = email,
+        clinicName = clinicName,
+        isConfirmed = isConfirmed
     )
 }
 

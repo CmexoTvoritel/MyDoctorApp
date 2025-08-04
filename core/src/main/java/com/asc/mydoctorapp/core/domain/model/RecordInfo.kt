@@ -7,4 +7,6 @@ data class RecordInfo (
     val docSurname: String?,
     val docSpecialty: String?,
     val email: String?,
+    val clinicName: String?,
+    val isConfirmed: Boolean
 )

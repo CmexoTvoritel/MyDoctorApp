@@ -156,24 +156,17 @@ fun MyDoctorNavHost(
     }
 }
 
-// Расширение для NavController для навигации к элементам боттомбара
 fun NavController.navigateToBottomBarItem(bottomBarItem: BottomBarItem) {
     val navOptions = navOptions {
-        // При навигации между элементами боттомбара, 
-        // поднимаем стартовую точку графа на верх стека
-        // для обеспечения правильного поведения кнопки Back
-        popUpTo(graph.findStartDestination().id) {
-            saveState = true
+        popUpTo(bottomBarItem.route.route) {
+            inclusive = true
         }
-        // Сохраняем состояние графа при переключении между табами
         launchSingleTop = true
-        // Восстанавливаем состояние, если возвращаемся на предыдущий элемент
-        restoreState = true
+        restoreState = false
     }
     navigate(bottomBarItem.route.route, navOptions)
 }
 
-// Graph для раздела Home
 private fun NavGraphBuilder.homeNavigationGraph(navController: NavController) {
     navigation(
         startDestination = AppRoutes.Home.route,

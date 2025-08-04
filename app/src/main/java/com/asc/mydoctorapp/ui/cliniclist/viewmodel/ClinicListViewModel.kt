@@ -34,6 +34,7 @@ class ClinicListViewModel @Inject constructor(
     fun handleEvent(event: ClinicListEvent) {
         when (event) {
             is ClinicListEvent.LoadClinics -> loadClinics()
+            is ClinicListEvent.OnRefresh -> refreshClinics()
             is ClinicListEvent.OnClinicClick -> {
                 viewModelScope.launch {
                     val route = AppRoutes.DoctorList.route.replace(
@@ -58,12 +59,35 @@ class ClinicListViewModel @Inject constructor(
                 val clinics = getAllClinicsUseCase()
                 _state.value = _state.value.copy(
                     isLoading = false,
+                    isRefreshing = false,
                     clinics = clinics,
                     error = null
                 )
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
+                    isRefreshing = false,
+                    error = e.message ?: "Ошибка загрузки клиник"
+                )
+                _actions.send(ClinicListAction.ShowError(e.message ?: "Ошибка загрузки клиник"))
+            }
+        }
+    }
+    
+    private fun refreshClinics() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isRefreshing = true, error = null)
+            
+            try {
+                val clinics = getAllClinicsUseCase()
+                _state.value = _state.value.copy(
+                    isRefreshing = false,
+                    clinics = clinics,
+                    error = null
+                )
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isRefreshing = false,
                     error = e.message ?: "Ошибка загрузки клиник"
                 )
                 _actions.send(ClinicListAction.ShowError(e.message ?: "Ошибка загрузки клиник"))

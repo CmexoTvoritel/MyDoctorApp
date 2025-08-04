@@ -18,9 +18,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,19 +46,19 @@ import com.asc.mydoctorapp.ui.doctorlist.viewmodel.DoctorListViewModel
 import com.asc.mydoctorapp.ui.doctorlist.viewmodel.model.DoctorAction
 import com.asc.mydoctorapp.ui.doctorlist.viewmodel.model.DoctorEvent
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DoctorListScreen(
     clinicName: String,
     onNavigateToScreen: (String) -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: DoctorListViewModel = hiltViewModel()
 ) {
-    val viewModel: DoctorListViewModel = hiltViewModel()
+    val state by viewModel.viewStates().collectAsState()
 
     LaunchedEffect(Unit) {
-        viewModel.obtainEvent(viewEvent = DoctorEvent.InitLoad(clinicName))
+        viewModel.obtainEvent(DoctorEvent.InitLoad(clinicName))
     }
-
-    val state by viewModel.viewStates().collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.viewActions().collect { action ->
@@ -65,7 +67,7 @@ fun DoctorListScreen(
                     val route = AppRoutes.DoctorDetails.route.replace("{doctorEmail}", action.doctorEmail).replace("{clinicName}", clinicName)
                     onNavigateToScreen(route)
                 }
-                is DoctorAction.NavigateBack -> {
+                DoctorAction.NavigateBack -> {
                     onNavigateBack()
                 }
                 else -> {}
@@ -78,12 +80,12 @@ fun DoctorListScreen(
             .fillMaxSize()
             .background(color = Color.White)
     ) {
-        // Fixed back button (doesn't scroll)
-        Box(
+        // Fixed back button
+        Row(
             modifier = Modifier
-                .align(alignment = Alignment.Start)
-                .padding(start = 24.dp)
-                .padding(top = 16.dp, bottom = 16.dp)
+                .fillMaxWidth()
+                .padding(start = 24.dp, top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 modifier = Modifier
@@ -96,61 +98,68 @@ fun DoctorListScreen(
                 tint = Color.Unspecified
             )
         }
-        
-        // Loading state or content
-        if (state?.isLoading == true) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    color = Color(0xFF43B3AE)
-                )
-            }
-        } else {
-            // Scrollable content with clinic info and doctors
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                // Clinic info card
-                item {
-                    state?.clinic?.let { clinic ->
-                        ClinicInfoCard(
-                            clinicName = clinic.name ?: "",
-                            clinicAddress = clinic.address ?: "",
-                            clinicEmail = clinic.email ?: "",
-                            clinicPhone = clinic.phone ?: "",
-                            clinicWorkingDays = clinic.workingDays ?: ""
-                        )
-                        
-                        Spacer(modifier = Modifier.height(16.dp))
-                        
-                        Text(
-                            text = "Список врачей клиники:",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Content with pull-to-refresh
+        PullToRefreshBox(
+            isRefreshing = state?.isRefreshing ?: false,
+            onRefresh = { viewModel.obtainEvent(DoctorEvent.OnRefresh) },
+            modifier = Modifier.fillMaxSize()
+        ) {
+            if (state?.isLoading == true) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFF43B3AE))
                 }
-                
-                // Doctors list
-                items(state?.doctorList ?: emptyList()) { doctor ->
-                    DoctorItemCard(
-                        doctor = doctor,
-                        onCardClick = { viewModel.obtainEvent(DoctorEvent.OnDoctorClick(doctor.id)) },
-                        onFavoriteToggle = { 
-                            viewModel.obtainEvent(
-                                DoctorEvent.OnFavoriteToggle(
-                                    doctorId = doctor.id,
-                                    newValue = !doctor.isFavorite
-                                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 24.dp)
+                ) {
+                    // Clinic info card
+                    state?.clinic?.let { clinic ->
+                        item {
+                            ClinicInfoCard(
+                                clinicName = clinic.name ?: "",
+                                clinicAddress = clinic.address ?: "",
+                                clinicEmail = clinic.email ?: "",
+                                clinicPhone = clinic.phone ?: "",
+                                clinicWorkingDays = clinic.workingDays ?: ""
                             )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Text(
+                                text = "Список врачей клиники:",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            
+                            Spacer(modifier = Modifier.height(16.dp))
                         }
-                    )
+                    }
+                    
+                    // Doctors list
+                    items(state?.doctorList ?: emptyList()) { doctor ->
+                        DoctorItemCard(
+                            doctor = doctor,
+                            onCardClick = { viewModel.obtainEvent(DoctorEvent.OnDoctorClick(doctor.id)) },
+                            onFavoriteToggle = { 
+                                viewModel.obtainEvent(
+                                    DoctorEvent.OnFavoriteToggle(
+                                        doctorId = doctor.id,
+                                        newValue = !doctor.isFavorite
+                                    )
+                                )
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                 }
             }
         }

@@ -9,4 +9,5 @@ data class RecordDto(
     @SerializedName("doc_surname") val docSurname: String?,
     @SerializedName("doc_specialty") val docSpecialty: String?,
     @SerializedName("email") val email: String?,
+    val clinicName: String?
 )

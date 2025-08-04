@@ -59,11 +59,50 @@ class DoctorListViewModel @Inject constructor(
     private fun navigateToDoctorDetails(doctorEmail: String) {
         sendViewAction(DoctorAction.NavigateToDoctorDetails(doctorEmail))
     }
+    
+    private fun refreshDoctors(clinicName: String) {
+        viewModelScope.launch {
+            updateViewState { state ->
+                state.copy(isRefreshing = true)
+            }
+            
+            try {
+                val clinic = getClinicByQueryUseCase(clinicName)
+                val doctors = getDoctorsUseCase(clinicName).map { doctor ->
+                    DoctorUIItem(
+                        id = doctor.email,
+                        name = doctor.name,
+                        surname = doctor.surname,
+                        specialty = doctor.specialty,
+                        rating = 5.0f,
+                        photoRes = R.drawable.ic_doctor_placeholder,
+                        isFavorite = false
+                    )
+                }
+                
+                updateViewState { state ->
+                    state.copy(
+                        isRefreshing = false,
+                        doctorList = doctors,
+                        clinic = clinic.firstOrNull()
+                    )
+                }
+            } catch (e: Exception) {
+                // Обработка ошибок загрузки
+                updateViewState { state ->
+                    state.copy(isRefreshing = false)
+                }
+            }
+        }
+    }
 
     override fun obtainEvent(viewEvent: DoctorEvent) {
         when (viewEvent) {
             is DoctorEvent.InitLoad -> {
                 loadDoctors(clinicName = viewEvent.clinicName)
+            }
+            is DoctorEvent.OnRefresh -> {
+                refreshDoctors(viewStates().value?.clinic?.name ?: "Clinic1")
             }
             DoctorEvent.OnBackClick -> {
                 sendViewAction(DoctorAction.NavigateBack)

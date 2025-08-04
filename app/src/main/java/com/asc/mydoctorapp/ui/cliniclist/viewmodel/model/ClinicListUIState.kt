@@ -4,12 +4,14 @@ import com.asc.mydoctorapp.core.domain.model.Clinic
 
 data class ClinicListUIState(
     val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
     val clinics: List<Clinic> = emptyList(),
     val error: String? = null
 )
 
 sealed interface ClinicListEvent {
     object LoadClinics : ClinicListEvent
+    object OnRefresh : ClinicListEvent
     data class OnClinicClick(val clinicName: String) : ClinicListEvent
     object OnBackClick : ClinicListEvent
 }

@@ -16,15 +16,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
@@ -52,6 +55,7 @@ import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileUIState
 
 private val TealColor = Color(0xFF43B3AE)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navigateTo: (String) -> Unit = {},
@@ -130,54 +134,60 @@ fun ProfileScreen(
         }
     }
     
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.White)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp)
+    PullToRefreshBox(
+        isRefreshing = state?.isRefreshing ?: false,
+        onRefresh = { viewModel.obtainEvent(ProfileEvent.OnRefresh) },
+        modifier = Modifier.fillMaxSize()
     ) {
-        state?.let { uiState ->
-            ProfileHeader(
-                uiState = uiState,
-                onSettingsClick = { viewModel.obtainEvent(ProfileEvent.OnSettingsClick) },
-                onAvatarClick = { viewModel.obtainEvent(ProfileEvent.OnAvatarClick) }
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.White)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
+        ) {
+            state?.let { uiState ->
+                ProfileHeader(
+                    uiState = uiState,
+                    onSettingsClick = { viewModel.obtainEvent(ProfileEvent.OnSettingsClick) },
+                    onAvatarClick = { viewModel.obtainEvent(ProfileEvent.OnAvatarClick) }
+                )
+                
+                Spacer(modifier = Modifier.height(24.dp))
 
-            FavoritesCard(
-                favoritesCount = uiState.favoritesCount,
-                onClick = { viewModel.obtainEvent(ProfileEvent.OnFavoritesClick) }
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            ReviewsCard(
-                reviewsCount = uiState.reviewsCount,
-                onClick = { viewModel.obtainEvent(ProfileEvent.OnReviewsClick) }
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            MedicalBookCard(
-                hasMedicalBook = uiState.hasMedicalBook,
-                onClick = { viewModel.obtainEvent(ProfileEvent.OnMedicalBookClick) }
-            )
-            
-            Spacer(modifier = Modifier.height(16.dp))
+                FavoritesCard(
+                    favoritesCount = uiState.favoritesCount,
+                    onClick = { viewModel.obtainEvent(ProfileEvent.OnFavoritesClick) }
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                ReviewsCard(
+                    reviewsCount = uiState.reviewsCount,
+                    onClick = { viewModel.obtainEvent(ProfileEvent.OnReviewsClick) }
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                MedicalBookCard(
+                    hasMedicalBook = uiState.hasMedicalBook,
+                    onClick = { viewModel.obtainEvent(ProfileEvent.OnMedicalBookClick) }
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
-            LogoutCard(
-                onClick = { viewModel.obtainEvent(viewEvent = ProfileEvent.OnLogoutClick) }
-            )
+                LogoutCard(
+                    onClick = { viewModel.obtainEvent(viewEvent = ProfileEvent.OnLogoutClick) }
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            SupportCard(
-                onClick = { viewModel.obtainEvent(ProfileEvent.OnSupportClick) }
-            )
+                SupportCard(
+                    onClick = { viewModel.obtainEvent(ProfileEvent.OnSupportClick) }
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+            }
         }
     }
 }

@@ -23,12 +23,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowForward
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -54,6 +56,7 @@ import com.asc.mydoctorapp.ui.home.viewmodel.model.HomeUIStateType
 
 private val TealColor = Color(0xFF43B3AE)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navigateTo: (String) -> Unit = {},
@@ -79,170 +82,175 @@ fun HomeScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = Color.White)
-            .verticalScroll(scrollState)
+    PullToRefreshBox(
+        isRefreshing = state?.isRefreshing ?: false,
+        onRefresh = { viewModel.obtainEvent(HomeEvent.OnRefresh) },
+        modifier = Modifier.fillMaxSize()
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Image(
-            modifier = Modifier.width(width = 174.dp).padding(horizontal = 24.dp),
-            painter = painterResource(id = R.drawable.ic_onboarding_logo),
-            contentDescription = null,
-            contentScale = ContentScale.FillWidth
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(
-            modifier = Modifier.padding(horizontal = 24.dp),
-            text = "Поиск клиники",
-            style = TextStyle(
-                fontWeight = FontWeight.Normal,
-                fontSize = 16.sp,
-            ),
-            color = Color.Black.copy(alpha = 0.7f)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = state?.query ?: "",
-            onValueChange = { viewModel.obtainEvent(HomeEvent.OnQueryChanged(it)) },
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .padding(horizontal = 24.dp),
-            placeholder = { Text(" ") },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = TealColor,
-                unfocusedBorderColor = Color.Gray
-            ),
-            trailingIcon = {
-                IconButton(
-                    onClick = { viewModel.obtainEvent(HomeEvent.OnSearchSubmit) }
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_search),
-                        contentDescription = "Поиск",
-                        tint = Color.Unspecified
-                    )
-                }
-            }
-        )
+                .fillMaxSize()
+                .background(color = Color.White)
+                .verticalScroll(scrollState)
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Image(
+                modifier = Modifier.width(width = 174.dp).padding(horizontal = 24.dp),
+                painter = painterResource(id = R.drawable.ic_onboarding_logo),
+                contentDescription = null,
+                contentScale = ContentScale.FillWidth
+            )
 
-        if (state?.screenState == HomeUIStateType.MAIN) {
-            Row(
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                modifier = Modifier.padding(horizontal = 24.dp),
+                text = "Поиск клиники",
+                style = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                ),
+                color = Color.Black.copy(alpha = 0.7f)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = state?.query ?: "",
+                onValueChange = { viewModel.obtainEvent(HomeEvent.OnQueryChanged(it)) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
-                    .padding(horizontal = 24.dp)
-                    .border(
-                        width = 1.dp,
-                        color = TealColor,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f)
-                        .padding(all = 16.dp)
-                        .align(alignment = Alignment.CenterVertically)
-                ) {
-                    Text(
-                        modifier = Modifier.padding(end = 8.dp),
-                        text = "Проверьте симптомы в чате с искусственным интеллектом",
-                        style = TextStyle(
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Normal
-                        ),
-                        color = Color.Black
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedButton(
-                        onClick = { viewModel.obtainEvent(HomeEvent.OnAiChatStartClick) },
-                        modifier = Modifier
-                            .width(90.dp)
-                            .height(32.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                        border = androidx.compose.foundation.BorderStroke(
-                            width = 1.dp,
-                            color = TealColor
+                    .height(52.dp)
+                    .padding(horizontal = 24.dp),
+                placeholder = { Text(" ") },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = TealColor,
+                    unfocusedBorderColor = Color.Gray
+                ),
+                trailingIcon = {
+                    IconButton(
+                        onClick = { viewModel.obtainEvent(HomeEvent.OnSearchSubmit) }
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_search),
+                            contentDescription = "Поиск",
+                            tint = Color.Unspecified
                         )
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            if (state?.screenState == HomeUIStateType.MAIN) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .padding(horizontal = 24.dp)
+                        .border(
+                            width = 1.dp,
+                            color = TealColor,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                            .padding(all = 16.dp)
+                            .align(alignment = Alignment.CenterVertically)
                     ) {
                         Text(
-                            text = "Начать",
+                            modifier = Modifier.padding(end = 8.dp),
+                            text = "Проверьте симптомы в чате с искусственным интеллектом",
                             style = TextStyle(
-                                fontSize = 17.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Normal
                             ),
                             color = Color.Black
                         )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedButton(
+                            onClick = { viewModel.obtainEvent(HomeEvent.OnAiChatStartClick) },
+                            modifier = Modifier
+                                .width(90.dp)
+                                .height(32.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                            border = androidx.compose.foundation.BorderStroke(
+                                width = 1.dp,
+                                color = TealColor
+                            )
+                        ) {
+                            Text(
+                                text = "Начать",
+                                style = TextStyle(
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Normal
+                                ),
+                                color = Color.Black
+                            )
+                        }
                     }
+
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_ai_help_main),
+                        contentDescription = "AI Chat",
+                        contentScale = ContentScale.FillHeight,
+                        modifier = Modifier
+                            .height(height = 140.dp)
+                            .align(alignment = Alignment.Bottom)
+                    )
                 }
 
-                Image(
-                    painter = painterResource(id = R.drawable.ic_ai_help_main),
-                    contentDescription = "AI Chat",
-                    contentScale = ContentScale.FillHeight,
-                    modifier = Modifier
-                        .height(height = 140.dp)
-                        .align(alignment = Alignment.Bottom)
-                )
-            }
+                Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            viewModel.obtainEvent(HomeEvent.OnSeeAllSpecialistsClick)
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Клиники для Вас",
+                        style = TextStyle(
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 16.sp,
+                        ),
+                        color = Color.Black.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.width(width = 4.dp))
+                    Icon(
+                        modifier = Modifier.size(22.dp),
+                        imageVector = Icons.Rounded.ArrowForward,
+                        contentDescription = "Смотреть все клиники",
+                        tint = TealColor
+                    )
+                }
 
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        viewModel.obtainEvent(HomeEvent.OnSeeAllSpecialistsClick)
-                    },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Клиники для Вас",
-                    style = TextStyle(
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 16.sp,
-                    ),
-                    color = Color.Black.copy(alpha = 0.7f)
-                )
-                Spacer(modifier = Modifier.width(width = 4.dp))
-                Icon(
-                    modifier = Modifier.size(22.dp),
-                    imageVector = Icons.Rounded.ArrowForward,
-                    contentDescription = "Смотреть все клиники",
-                    tint = TealColor
-                )
-            }
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(horizontal = 24.dp)
-            ) {
-                items(state?.clinicsMain ?: emptyList()) { clinic ->
-                    ClinicMainCard(
-                        clinicInfo = clinic
-                    ) {
-                        viewModel.obtainEvent(HomeEvent.OnClinicCardClick(
-                            clinicName = clinic.name ?: "Clinic1"
-                        ))
-                    }
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 24.dp)
+                ) {
+                    items(state?.clinicsMain ?: emptyList()) { clinic ->
+                        ClinicMainCard(
+                            clinicInfo = clinic
+                        ) {
+                            viewModel.obtainEvent(HomeEvent.OnClinicCardClick(
+                                clinicName = clinic.name ?: "Clinic1"
+                            ))
+                        }
 //                    DoctorCard(
 //                        doctor = doctor,
 //                        isFavorite = state?.favorites?.contains(doctor.id) ?: false,
@@ -258,63 +266,64 @@ fun HomeScreen(
 //                            )
 //                        }
 //                    )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Кнопка FAQ внизу
-            OutlinedButton(
-                onClick = { viewModel.obtainEvent(HomeEvent.OnFaqClick) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = TealColor
-                ),
-                contentPadding = PaddingValues(horizontal = 16.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Кнопка FAQ внизу
+                OutlinedButton(
+                    onClick = { viewModel.obtainEvent(HomeEvent.OnFaqClick) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    border = androidx.compose.foundation.BorderStroke(
+                        width = 1.dp,
+                        color = TealColor
+                    ),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
                 ) {
-                    Text(
-                        text = "Остались вопросы?",
-                        style = TextStyle(
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 17.sp,
-                        ),
-                        color = Color.Black.copy(alpha = 0.7f)
-                    )
-                    Icon(
-                        modifier = Modifier.size(30.dp),
-                        painter = painterResource(id = R.drawable.ic_question_widget),
-                        contentDescription = "FAQ",
-                        tint = Color.Unspecified
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Остались вопросы?",
+                            style = TextStyle(
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 17.sp,
+                            ),
+                            color = Color.Black.copy(alpha = 0.7f)
+                        )
+                        Icon(
+                            modifier = Modifier.size(30.dp),
+                            painter = painterResource(id = R.drawable.ic_question_widget),
+                            contentDescription = "FAQ",
+                            tint = Color.Unspecified
+                        )
+                    }
                 }
-            }
-            Spacer(modifier = Modifier.height(24.dp))
-        } else if (state?.screenState == HomeUIStateType.SEARCH) {
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp)
-            ) {
-                state?.clinics?.forEach { clinic ->
-                    ClinicSearchCard(
-                        clinicName = clinic.name ?: "",
-                        clinicAddress = clinic.address ?: "",
-                        clinicEmail = clinic.email ?: "",
-                        clinicPhone = clinic.phone ?: "",
-                        clinicWorkingTime = clinic.workingDays ?: "",
-                        onClinicClick = { clinicName ->
-                            viewModel.obtainEvent(viewEvent = HomeEvent.OnClinicCardClick(clinicName))
-                        }
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
+            } else if (state?.screenState == HomeUIStateType.SEARCH) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                ) {
+                    state?.clinics?.forEach { clinic ->
+                        ClinicSearchCard(
+                            clinicName = clinic.name ?: "",
+                            clinicAddress = clinic.address ?: "",
+                            clinicEmail = clinic.email ?: "",
+                            clinicPhone = clinic.phone ?: "",
+                            clinicWorkingTime = clinic.workingDays ?: "",
+                            onClinicClick = { clinicName ->
+                                viewModel.obtainEvent(viewEvent = HomeEvent.OnClinicCardClick(clinicName))
+                            }
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
         }

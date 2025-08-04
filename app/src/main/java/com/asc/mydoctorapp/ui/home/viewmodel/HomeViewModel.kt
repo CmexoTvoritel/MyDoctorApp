@@ -71,8 +71,37 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun refreshData() {
+        viewModelScope.launch {
+            updateViewState { state ->
+                state.copy(isRefreshing = true)
+            }
+            
+            try {
+                // Обновляем клиники
+                val clinics = getAllClinicsUseCase()
+                
+                // Обновляем информацию о пользователе
+                userInfoUseCase.invoke()
+                
+                updateViewState { state ->
+                    state.copy(
+                        clinicsMain = clinics,
+                        isRefreshing = false
+                    )
+                }
+            } catch (e: Exception) {
+                // Обработка ошибок загрузки
+                updateViewState { state ->
+                    state.copy(isRefreshing = false)
+                }
+            }
+        }
+    }
+
     override fun obtainEvent(viewEvent: HomeEvent) {
         when (viewEvent) {
+            is HomeEvent.OnRefresh -> refreshData()
             is HomeEvent.OnQueryChanged -> handleQueryChange(viewEvent.text)
             is HomeEvent.OnSearchSubmit -> handleSearchSubmit()
             is HomeEvent.OnAiChatStartClick -> handleAiChatStart()

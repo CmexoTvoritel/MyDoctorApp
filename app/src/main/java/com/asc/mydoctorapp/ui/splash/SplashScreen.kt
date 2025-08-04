@@ -1,10 +1,12 @@
 package com.asc.mydoctorapp.ui.splash
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import com.asc.mydoctorapp.ui.splash.viewmodel.SplashViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.asc.mydoctorapp.ui.splash.viewmodel.model.SplashAction
@@ -23,7 +25,7 @@ fun SplashScreen(onNavigateToStartScreen: (String) -> Unit) {
     }
 
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().background(color = Color.White)
     ) {
         //TODO:Doctor implement logo in splash screen
     }
