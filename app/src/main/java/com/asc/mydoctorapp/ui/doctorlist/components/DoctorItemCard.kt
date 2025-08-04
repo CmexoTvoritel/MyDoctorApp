@@ -2,7 +2,6 @@ package com.asc.mydoctorapp.ui.doctorlist.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +28,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.asc.mydoctorapp.ui.doctorlist.model.DoctorUIItem
+import com.asc.mydoctorapp.core.data.remote.DoctorUIItem
 
 @Composable
 fun DoctorItemCard(

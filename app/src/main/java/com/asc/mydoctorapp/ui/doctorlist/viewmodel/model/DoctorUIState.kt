@@ -1,7 +1,7 @@
 package com.asc.mydoctorapp.ui.doctorlist.viewmodel.model
 
 import com.asc.mydoctorapp.core.domain.model.Clinic
-import com.asc.mydoctorapp.ui.doctorlist.model.DoctorUIItem
+import com.asc.mydoctorapp.core.data.remote.DoctorUIItem
 
 data class DoctorUIState (
     val isLoading: Boolean = true,

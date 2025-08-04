@@ -9,6 +9,7 @@ fun RecordEntity.toRecordUi(): RecordUI {
     return RecordUI(
         id = this.id,
         doctorName = this.doctorName,
+        doctorEmail = this.id,
         specialty = this.specialty,
         time = this.time,
         address = this.address,

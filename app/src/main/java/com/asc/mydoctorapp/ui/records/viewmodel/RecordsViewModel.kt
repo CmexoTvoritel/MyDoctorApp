@@ -5,6 +5,7 @@ import com.asc.mydoctorapp.core.data.mapper.toEntity
 import com.asc.mydoctorapp.core.data.mapper.toRecordUi
 import com.asc.mydoctorapp.core.data.remote.RecordUI
 import com.asc.mydoctorapp.core.domain.model.Clinic
+import com.asc.mydoctorapp.core.domain.usecase.FavoriteDoctorsUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetClinicByQueryUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetUserRecordsUseCase
 import com.asc.mydoctorapp.core.domain.usecase.RecordsDatabaseUseCase
@@ -27,7 +28,8 @@ class RecordsViewModel @Inject constructor(
     private val getUserRecordsUseCase: GetUserRecordsUseCase,
     private val getClinicByQueryUseCase: GetClinicByQueryUseCase,
     private val recordsDatabaseUseCase: RecordsDatabaseUseCase,
-    private val userInfoUseCase: UserInfoUseCase
+    private val userInfoUseCase: UserInfoUseCase,
+    private val favoriteDoctorsUseCase: FavoriteDoctorsUseCase
 ) : BaseSharedViewModel<RecordsUIState, RecordsAction, RecordsEvent>(
     initialState = RecordsUIState(
         isLoading = true,
@@ -72,13 +74,21 @@ class RecordsViewModel @Inject constructor(
                 val formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy, HH:mm")
                 
                 val records = userEvents.map {
+                    val doctorFullName = "${it.docName} ${it.docSurname}"
+                    val nameParts = doctorFullName.split(" ")
+                    val doctorFirstName = nameParts.firstOrNull() ?: ""
+                    val doctorLastName = nameParts.getOrNull(1) ?: ""
+                    val favoriteKey = favoriteDoctorsUseCase.generateDoctorEmail(doctorFirstName, doctorLastName)
+                    val isFavorite = favoriteDoctorsUseCase.isFavoriteDoctor(userEmail, favoriteKey)
+                    
                     RecordUI(
                         id = it.email ?: "",
-                        doctorName = "${it.docName} ${it.docSurname}",
+                        doctorName = doctorFullName,
+                        doctorEmail = it.email ?: "", // Используем email врача из записи
                         time = it.start ?: "",
                         specialty = it.docSpecialty ?: "Врач",
                         photoRes = R.drawable.ic_doctor_placeholder,
-                        isFavorite = false,
+                        isFavorite = isFavorite,
                         address = clinics.find { clinic -> clinic?.name == it.clinicName }?.address ?: "",
                         clinic = it.clinicName ?: "",
                         isConfirmed = it.isConfirmed
@@ -148,22 +158,61 @@ class RecordsViewModel @Inject constructor(
     }
     
     private fun toggleFavorite(recordId: String, newValue: Boolean) {
-        // Handle favorite toggle logic here
-        updateViewState { state ->
-            val updatedCurrent = state.current.map { record ->
-                if (record.id == recordId) record.copy(isFavorite = newValue) else record
+        viewModelScope.launch {
+            try {
+                val userEmail = userInfoUseCase.invoke().login ?: ""
+                
+                // Находим запись с указанным ID во всех списках
+                val allRecords = (viewStates().value?.current ?: emptyList()) +
+                                (viewStates().value?.past ?: emptyList()) +
+                                (viewStates().value?.cancelled ?: emptyList())
+                
+                val record = allRecords.find { it.id == recordId }
+                
+                if (record != null) {
+                    // Извлекаем имя и фамилию врача из полного имени
+                    val nameParts = record.doctorName.split(" ")
+                    val doctorFirstName = nameParts.firstOrNull() ?: ""
+                    val doctorLastName = nameParts.getOrNull(1) ?: ""
+                    val favoriteKey = favoriteDoctorsUseCase.generateDoctorEmail(doctorFirstName, doctorLastName)
+                    
+                    if (newValue) {
+                        favoriteDoctorsUseCase.addFavoriteDoctor(
+                            userEmail = userEmail,
+                            doctorEmail = record.doctorEmail, // Оригинальный email из записи!
+                            favoriteKey = favoriteKey,
+                            name = doctorFirstName,
+                            surname = doctorLastName,
+                            specialty = record.specialty,
+                            rating = 5.0f,
+                            photoRes = record.photoRes,
+                            clinic = record.clinic
+                        )
+                    } else {
+                        favoriteDoctorsUseCase.removeFavoriteDoctor(userEmail, favoriteKey)
+                    }
+                    
+                    // Обновляем UI
+                    updateViewState { state ->
+                        val updatedCurrent = state.current.map { r ->
+                            if (r.id == recordId) r.copy(isFavorite = newValue) else r
+                        }
+                        val updatedPast = state.past.map { r ->
+                            if (r.id == recordId) r.copy(isFavorite = newValue) else r
+                        }
+                        val updatedCancelled = state.cancelled.map { r ->
+                            if (r.id == recordId) r.copy(isFavorite = newValue) else r
+                        }
+                        state.copy(
+                            current = updatedCurrent,
+                            past = updatedPast,
+                            cancelled = updatedCancelled
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // В случае ошибки логируем или показываем пользователю
             }
-            val updatedPast = state.past.map { record ->
-                if (record.id == recordId) record.copy(isFavorite = newValue) else record
-            }
-            val updatedCancelled = state.cancelled.map { record ->
-                if (record.id == recordId) record.copy(isFavorite = newValue) else record
-            }
-            state.copy(
-                current = updatedCurrent,
-                past = updatedPast,
-                cancelled = updatedCancelled
-            )
         }
     }
     

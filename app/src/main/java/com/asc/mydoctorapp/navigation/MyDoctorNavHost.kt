@@ -21,6 +21,7 @@ import com.asc.mydoctorapp.ui.cliniclist.ClinicListScreen
 import com.asc.mydoctorapp.ui.doctordetail.DoctorDetailScreen
 import com.asc.mydoctorapp.ui.doctorlist.DoctorListScreen
 import com.asc.mydoctorapp.ui.doctorrecord.DoctorRecordScreen
+import com.asc.mydoctorapp.ui.favourites.FavouritesDoctorsScreen
 import com.asc.mydoctorapp.ui.finishrecord.FinishRecordScreen
 import com.asc.mydoctorapp.ui.home.HomeScreen
 import com.asc.mydoctorapp.ui.login.LoginScreen
@@ -80,7 +81,8 @@ enum class AppRoutes(val route: String) {
     RecordsDetails("records/details"),
     Profile("profile"),
     ProfileSettings("profile/settings"),
-    ProfileEdit("profile/edit")
+    ProfileEdit("profile/edit"),
+    ProfileFavorites("profile/favorites")
 }
 
 @Composable
@@ -386,6 +388,16 @@ private fun NavGraphBuilder.profileNavigationGraph(navController: NavController)
             ChangeUserScreen(
                 onBackClick = {
                     navController.popBackStack()
+                }
+            )
+        }
+        composable(route = AppRoutes.ProfileFavorites.route) {
+            FavouritesDoctorsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                navigateTo = { route ->
+                    navController.navigate(route)
                 }
             )
         }

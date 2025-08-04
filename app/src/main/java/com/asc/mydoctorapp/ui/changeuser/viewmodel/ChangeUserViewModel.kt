@@ -2,6 +2,7 @@ package com.asc.mydoctorapp.ui.changeuser.viewmodel
 
 import android.util.Patterns
 import com.asc.mydoctorapp.core.domain.usecase.ChangeUserInfoUseCase
+import com.asc.mydoctorapp.core.domain.usecase.FavoriteDoctorsUseCase
 import com.asc.mydoctorapp.core.domain.usecase.RecordsDatabaseUseCase
 import com.asc.mydoctorapp.core.domain.usecase.UserInfoUseCase
 import com.asc.mydoctorapp.ui.changeuser.viewmodel.model.ChangeUserAction
@@ -20,7 +21,8 @@ import javax.inject.Inject
 class ChangeUserViewModel @Inject constructor(
     private val userInfoUseCase: UserInfoUseCase,
     private val changeUserInfoUseCase: ChangeUserInfoUseCase,
-    private val recordsDatabaseUseCase: RecordsDatabaseUseCase
+    private val recordsDatabaseUseCase: RecordsDatabaseUseCase,
+    private val favoriteDoctorsUseCase: FavoriteDoctorsUseCase
 ): BaseSharedViewModel<ChangeUserUIState, ChangeUserAction, ChangeUserEvent>(
     initialState = ChangeUserUIState()
 ) {
@@ -120,9 +122,10 @@ class ChangeUserViewModel @Inject constructor(
                 birth = formatDateForServer(currentState.dateOfBirth)
             )
             if (result) {
-                // Обновляем email в базе данных записей если он изменился
+                // Обновляем email в базе данных записей и избранных врачей если он изменился
                 if (currentState.email != originalEmail) {
                     recordsDatabaseUseCase.updateUserEmail(originalEmail, currentState.email)
+                    favoriteDoctorsUseCase.updateUserEmail(originalEmail, currentState.email)
                 }
                 sendViewAction(ChangeUserAction.OnNavigateAfterSave)
             } else {

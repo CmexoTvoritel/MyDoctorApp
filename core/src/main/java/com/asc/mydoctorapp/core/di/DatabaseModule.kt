@@ -3,6 +3,7 @@ package com.asc.mydoctorapp.core.di
 import android.content.Context
 import com.asc.mydoctorapp.core.database.AppDatabase
 import com.asc.mydoctorapp.core.database.dao.RecordDao
+import com.asc.mydoctorapp.core.database.dao.FavoriteDoctorDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,5 +24,10 @@ object DatabaseModule {
     @Provides
     fun provideRecordDao(database: AppDatabase): RecordDao {
         return database.recordDao()
+    }
+    
+    @Provides
+    fun provideFavoriteDoctorDao(database: AppDatabase): FavoriteDoctorDao {
+        return database.favoriteDoctorDao()
     }
 }

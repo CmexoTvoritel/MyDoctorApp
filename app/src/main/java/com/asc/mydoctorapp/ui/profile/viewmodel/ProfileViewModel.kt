@@ -2,6 +2,7 @@ package com.asc.mydoctorapp.ui.profile.viewmodel
 
 import com.asc.mydoctorapp.core.domain.usecase.HardUpdateUserInfoUseCase
 import com.asc.mydoctorapp.core.domain.usecase.UserInfoUseCase
+import com.asc.mydoctorapp.core.domain.usecase.FavoriteDoctorsUseCase
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileAction
 import com.asc.mydoctorapp.ui.profile.viewmodel.model.ProfileEvent
@@ -15,7 +16,8 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val userInfoUseCase: UserInfoUseCase,
     private val preferencesManager: PreferencesManager,
-    private val hardUpdateUserInfo: HardUpdateUserInfoUseCase
+    private val hardUpdateUserInfo: HardUpdateUserInfoUseCase,
+    private val favoriteDoctorsUseCase: FavoriteDoctorsUseCase
 ) : BaseSharedViewModel<ProfileUIState, ProfileAction, ProfileEvent>(
     initialState = ProfileUIState()
 ) {
@@ -27,11 +29,13 @@ class ProfileViewModel @Inject constructor(
     fun refreshUserInfo() {
         viewModelScope.launch {
             val profileInfo = hardUpdateUserInfo.invoke()
+            val favoritesCount = favoriteDoctorsUseCase.getFavoriteDoctorsCountByUser(profileInfo.login ?: "")
             updateViewState { state ->
                 state.copy(
                     userName = profileInfo.name,
                     userLogin = profileInfo.login,
                     userBirth = profileInfo.birth,
+                    favoritesCount = favoritesCount
                 )
             }
         }
@@ -40,11 +44,13 @@ class ProfileViewModel @Inject constructor(
     private fun loadUserInfo() {
         viewModelScope.launch {
             val profileInfo = userInfoUseCase.invoke()
+            val favoritesCount = favoriteDoctorsUseCase.getFavoriteDoctorsCountByUser(profileInfo.login ?: "")
             updateViewState { state ->
                 state.copy(
                     userName = profileInfo.name,
                     userLogin = profileInfo.login,
                     userBirth = profileInfo.birth,
+                    favoritesCount = favoritesCount
                 )
             }
         }

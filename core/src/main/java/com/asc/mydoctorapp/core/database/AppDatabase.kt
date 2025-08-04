@@ -5,16 +5,19 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import android.content.Context
 import com.asc.mydoctorapp.core.database.dao.RecordDao
+import com.asc.mydoctorapp.core.database.dao.FavoriteDoctorDao
 import com.asc.mydoctorapp.core.database.entity.RecordEntity
+import com.asc.mydoctorapp.core.database.entity.FavoriteDoctorEntity
 
 @Database(
-    entities = [RecordEntity::class],
-    version = 2,
+    entities = [RecordEntity::class, FavoriteDoctorEntity::class],
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     
     abstract fun recordDao(): RecordDao
+    abstract fun favoriteDoctorDao(): FavoriteDoctorDao
     
     companion object {
         @Volatile

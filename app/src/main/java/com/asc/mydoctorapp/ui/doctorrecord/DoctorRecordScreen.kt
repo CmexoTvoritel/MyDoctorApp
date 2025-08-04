@@ -206,7 +206,7 @@ fun DoctorRecordScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Нет свободного времени записи",
+                                text = "Вы уже записаны на эту дату",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontSize = 18.sp
                                 ),

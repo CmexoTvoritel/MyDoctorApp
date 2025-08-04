@@ -91,11 +91,7 @@ fun ProfileScreen(
                     navigateTo(AppRoutes.ProfileSettings.route)
                 }
                 is ProfileAction.NavigateToFavorites -> {
-                    Toast.makeText(
-                        context,
-                        "Not implemented yet",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    navigateTo(AppRoutes.ProfileFavorites.route)
                 }
                 is ProfileAction.NavigateToReviews -> navigateTo("home/reviewsList/true")
                 is ProfileAction.NavigateToMedicalBookView -> {
@@ -283,7 +279,7 @@ fun FavoritesCard(
             )
         },
         title = "Избранное",
-        subtitle = if (favoritesCount == 0) "Нет добавленных врачей и клиник" else "$favoritesCount врача",
+        subtitle = if (favoritesCount == 0) "Нет добавленных врачей" else "У вас $favoritesCount избранных врачей",
         onClick = onClick
     )
 }
