@@ -35,7 +35,7 @@ fun ClinicMainCard(
 ) {
     Box(
         modifier = Modifier
-            .width(width = 225.dp)
+            .width(width = 240.dp)
             .border(
                 width = 1.dp,
                 color = TealColor,

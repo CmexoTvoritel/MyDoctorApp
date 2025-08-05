@@ -158,19 +158,19 @@ fun ProfileScreen(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                ReviewsCard(
-                    reviewsCount = uiState.reviewsCount,
-                    onClick = { viewModel.obtainEvent(ProfileEvent.OnReviewsClick) }
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                MedicalBookCard(
-                    hasMedicalBook = uiState.hasMedicalBook,
-                    onClick = { viewModel.obtainEvent(ProfileEvent.OnMedicalBookClick) }
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
+//                ReviewsCard(
+//                    reviewsCount = uiState.reviewsCount,
+//                    onClick = { viewModel.obtainEvent(ProfileEvent.OnReviewsClick) }
+//                )
+//
+//                Spacer(modifier = Modifier.height(16.dp))
+//
+//                MedicalBookCard(
+//                    hasMedicalBook = uiState.hasMedicalBook,
+//                    onClick = { viewModel.obtainEvent(ProfileEvent.OnMedicalBookClick) }
+//                )
+//
+//                Spacer(modifier = Modifier.height(16.dp))
 
                 LogoutCard(
                     onClick = { viewModel.obtainEvent(viewEvent = ProfileEvent.OnLogoutClick) }
@@ -212,22 +212,22 @@ fun ProfileHeader(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Аватар пользователя
-            Surface(
-                shape = CircleShape,
-                color = Color(0xFFE0E0E0),
-                modifier = Modifier
-                    .size(104.dp)
-                    .clickable { onAvatarClick() }
-            ) {
-                if (uiState.avatarRes != null) {
-                    Image(
-                        painter = painterResource(id = uiState.avatarRes),
-                        contentDescription = "Аватар",
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
-            }
+//            // Аватар пользователя
+//            Surface(
+//                shape = CircleShape,
+//                color = Color(0xFFE0E0E0),
+//                modifier = Modifier
+//                    .size(104.dp)
+//                    .clickable { onAvatarClick() }
+//            ) {
+//                if (uiState.avatarRes != null) {
+//                    Image(
+//                        painter = painterResource(id = uiState.avatarRes),
+//                        contentDescription = "Аватар",
+//                        modifier = Modifier.fillMaxSize()
+//                    )
+//                }
+//            }
             
             Spacer(modifier = Modifier.width(width = 8.dp))
             Column(

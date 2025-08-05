@@ -11,7 +11,9 @@ data class ChatUIState(
     val screenState: ScreenState = ScreenState.WELCOME,
     val messages: List<ChatMessage> = emptyList(),  // история
     val inputText: String = "",
-    val aiReplyCount: Int = 0                       // сколько ответов ИИ отправлено
+    val aiReplyCount: Int = 0,                      // сколько ответов ИИ отправлено
+    val remainingSessions: Int = 2,                 // оставшиеся сессии на сегодня
+    val isSessionLimitReached: Boolean = false      // превышен ли лимит сессий
 )
 
 data class ChatMessage(

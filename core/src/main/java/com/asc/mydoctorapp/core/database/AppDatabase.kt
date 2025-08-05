@@ -6,18 +6,21 @@ import androidx.room.RoomDatabase
 import android.content.Context
 import com.asc.mydoctorapp.core.database.dao.RecordDao
 import com.asc.mydoctorapp.core.database.dao.FavoriteDoctorDao
+import com.asc.mydoctorapp.core.database.dao.ChatSessionDao
 import com.asc.mydoctorapp.core.database.entity.RecordEntity
 import com.asc.mydoctorapp.core.database.entity.FavoriteDoctorEntity
+import com.asc.mydoctorapp.core.database.entity.ChatSessionEntity
 
 @Database(
-    entities = [RecordEntity::class, FavoriteDoctorEntity::class],
-    version = 5,
+    entities = [RecordEntity::class, FavoriteDoctorEntity::class, ChatSessionEntity::class],
+    version = 6,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     
     abstract fun recordDao(): RecordDao
     abstract fun favoriteDoctorDao(): FavoriteDoctorDao
+    abstract fun chatSessionDao(): ChatSessionDao
     
     companion object {
         @Volatile

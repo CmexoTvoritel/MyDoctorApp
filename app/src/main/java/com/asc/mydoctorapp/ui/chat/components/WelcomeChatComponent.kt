@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun WelcomeChatComponent(
+    remainingSessions: Int = 2,
+    isSessionLimitReached: Boolean = false,
     onStartClick: () -> Unit
 ) {
     Box(
@@ -67,11 +69,42 @@ fun WelcomeChatComponent(
             )
 
             Spacer(modifier = Modifier.weight(weight = 1f))
+            
+            // Информация о сессиях
+            Text(
+                text = if (remainingSessions > 0) {
+                    "Осталось $remainingSessions из 2 сессий ИИ"
+                } else {
+                    "Сессии ИИ исчерпаны на сегодня"
+                },
+                style = TextStyle(
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    color = if (remainingSessions > 0) Color.Black.copy(alpha = 0.7f) else Color(0xFFEA4D4D)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+            )
+            
+            Text(
+                text = "Обновляется каждый день",
+                style = TextStyle(
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp,
+                    color = Color.Black.copy(alpha = 0.5f)
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp)
+            )
 
             Button(
                 onClick = onStartClick,
+                enabled = !isSessionLimitReached,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = com.asc.mydoctorapp.ui.chat.TealColor
+                    containerColor = if (isSessionLimitReached) Color.Gray else Color(0xFF43B3AE),
+                    disabledContainerColor = Color.Gray
                 ),
                 modifier = Modifier
                     .fillMaxWidth()

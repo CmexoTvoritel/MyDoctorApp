@@ -2,6 +2,7 @@ package com.asc.mydoctorapp.ui.changeuser.viewmodel
 
 import android.util.Patterns
 import com.asc.mydoctorapp.core.domain.usecase.ChangeUserInfoUseCase
+import com.asc.mydoctorapp.core.domain.usecase.ChatSessionUseCase
 import com.asc.mydoctorapp.core.domain.usecase.FavoriteDoctorsUseCase
 import com.asc.mydoctorapp.core.domain.usecase.RecordsDatabaseUseCase
 import com.asc.mydoctorapp.core.domain.usecase.UserInfoUseCase
@@ -22,7 +23,8 @@ class ChangeUserViewModel @Inject constructor(
     private val userInfoUseCase: UserInfoUseCase,
     private val changeUserInfoUseCase: ChangeUserInfoUseCase,
     private val recordsDatabaseUseCase: RecordsDatabaseUseCase,
-    private val favoriteDoctorsUseCase: FavoriteDoctorsUseCase
+    private val favoriteDoctorsUseCase: FavoriteDoctorsUseCase,
+    private val chatSessionUseCase: ChatSessionUseCase
 ): BaseSharedViewModel<ChangeUserUIState, ChangeUserAction, ChangeUserEvent>(
     initialState = ChangeUserUIState()
 ) {
@@ -126,6 +128,7 @@ class ChangeUserViewModel @Inject constructor(
                 if (currentState.email != originalEmail) {
                     recordsDatabaseUseCase.updateUserEmail(originalEmail, currentState.email)
                     favoriteDoctorsUseCase.updateUserEmail(originalEmail, currentState.email)
+                    chatSessionUseCase.updateUserEmail(originalEmail, currentState.email)
                 }
                 sendViewAction(ChangeUserAction.OnNavigateAfterSave)
             } else {

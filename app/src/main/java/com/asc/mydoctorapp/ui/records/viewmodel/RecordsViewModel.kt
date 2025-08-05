@@ -118,14 +118,28 @@ class RecordsViewModel @Inject constructor(
                     }
                 }
                 
+                // Разделение прошедших записей по статусу подтверждения
                 val pastRecords = records.filter { record ->
                     try {
                         val recordTime = LocalDateTime.parse(record.time, formatter)
-                        recordTime.isBefore(currentTime)
+                        recordTime.isBefore(currentTime) && record.isConfirmed
                     } catch (e: DateTimeParseException) {
                         false
                     }
                 }
+                
+                // Прошедшие неподтвержденные записи добавляем к отмененным
+                val pastUnconfirmedRecords = records.filter { record ->
+                    try {
+                        val recordTime = LocalDateTime.parse(record.time, formatter)
+                        recordTime.isBefore(currentTime) && !record.isConfirmed
+                    } catch (e: DateTimeParseException) {
+                        false
+                    }
+                }.map { it.copy(isConfirmed = false) } // Устанавливаем isConfirmed = false для отображения как отмененные
+                
+                // Объединяем отмененные записи из базы с прошедшими неподтвержденными
+                val allCancelledRecords = cancelledRecords + pastUnconfirmedRecords
                 
                 updateViewState { state ->
                     state.copy(
@@ -133,7 +147,7 @@ class RecordsViewModel @Inject constructor(
                         isRefreshing = false,
                         current = currentRecords,
                         past = pastRecords,
-                        cancelled = cancelledRecords
+                        cancelled = allCancelledRecords
                     )
                 }
             } catch (e: Exception) {

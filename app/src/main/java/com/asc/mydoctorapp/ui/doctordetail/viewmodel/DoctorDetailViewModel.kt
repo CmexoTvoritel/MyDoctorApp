@@ -2,6 +2,7 @@ package com.asc.mydoctorapp.ui.doctordetail.viewmodel
 
 import com.asc.mydoctorapp.R
 import com.asc.mydoctorapp.core.data.remote.WorkingDays
+import com.asc.mydoctorapp.core.domain.usecase.GetActiveRecordsCountUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetClinicByQueryUseCase
 import com.asc.mydoctorapp.core.domain.usecase.GetDoctorByEmailUseCase
 import com.asc.mydoctorapp.ui.doctordetail.viewmodel.model.ClinicInfo
@@ -18,12 +19,18 @@ import javax.inject.Inject
 @HiltViewModel
 class DoctorDetailViewModel @Inject constructor(
     private val getDoctorByEmailUseCase: GetDoctorByEmailUseCase,
-    private val getClinicByQueryUseCase: GetClinicByQueryUseCase
+    private val getClinicByQueryUseCase: GetClinicByQueryUseCase,
+    private val getActiveRecordsCountUseCase: GetActiveRecordsCountUseCase
 ) : BaseSharedViewModel<DoctorDetailUIState, DoctorDetailAction, DoctorDetailEvent>(
     initialState = DoctorDetailUIState(
-        isLoading = true
+        isLoadingDoctor = true,
+        isLoadingRecords = true
     )
 ) {
+    init {
+        loadActiveRecordsCount()
+    }
+    
     private val dayRu = mapOf(
         "Monday" to "пн",
         "Tuesday" to "вт",
@@ -53,8 +60,14 @@ class DoctorDetailViewModel @Inject constructor(
                 sendViewAction(action = DoctorDetailAction.NavigateBack)
             }
             is DoctorDetailEvent.OnBookClick -> {
+                val currentState = viewStates().value
+                if (currentState?.isRecordLimitReached == true) {
+                    // Не разрешаем навигацию при превышении лимита
+                    return
+                }
+                
                 sendViewAction(DoctorDetailAction.NavigateToBooking(
-                    doctorEmail = viewStates().value?.doctor?.id ?: ""
+                    doctorEmail = currentState?.doctor?.id ?: ""
                 ))
             }
             is DoctorDetailEvent.OnSupportClick -> {
@@ -65,12 +78,13 @@ class DoctorDetailViewModel @Inject constructor(
             }
             is DoctorDetailEvent.LoadDoctor -> {
                 loadDoctorByEmail(viewEvent.email, viewEvent.clinicName)
+                loadActiveRecordsCount()
             }
         }
     }
 
     private fun loadDoctorByEmail(email: String, clinicName: String) {
-        updateViewState { it.copy(isLoading = true) }
+        updateViewState { it.copy(isLoadingDoctor = true) }
         
         viewModelScope.launch {
             try {
@@ -129,12 +143,41 @@ class DoctorDetailViewModel @Inject constructor(
                         tags = tags,
                         reviews = reviews,
                         clinicInfo = clinicInfo,
-                        isLoading = false
+                        isLoadingDoctor = false
                     )
                 }
             } catch (e: Exception) {
                 // Обработка ошибки
-                updateViewState { it.copy(isLoading = false) }
+                updateViewState { it.copy(isLoadingDoctor = false) }
+            }
+        }
+    }
+
+    private fun loadActiveRecordsCount() {
+        updateViewState { state ->
+            state.copy(isLoadingRecords = true)
+        }
+        viewModelScope.launch {
+            try {
+                val activeRecordsCount = getActiveRecordsCountUseCase()
+                val isRecordLimitReached = getActiveRecordsCountUseCase.isRecordLimitReached()
+                
+                updateViewState { state ->
+                    state.copy(
+                        activeRecordsCount = activeRecordsCount,
+                        isRecordLimitReached = isRecordLimitReached,
+                        isLoadingRecords = false
+                    )
+                }
+            } catch (e: Exception) {
+                // Обработка ошибки - устанавливаем безопасные значения
+                updateViewState { state ->
+                    state.copy(
+                        activeRecordsCount = 0,
+                        isRecordLimitReached = false,
+                        isLoadingRecords = false
+                    )
+                }
             }
         }
     }

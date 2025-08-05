@@ -6,7 +6,10 @@ data class DoctorDetailUIState(
     val tags: List<String> = emptyList(),
     val reviews: List<ReviewUi> = emptyList(),
     val clinicInfo: ClinicInfo = ClinicInfo(),
-    val isLoading: Boolean = false
+    val isLoadingDoctor: Boolean = false,
+    val isLoadingRecords: Boolean = false,
+    val activeRecordsCount: Int = 0,
+    val isRecordLimitReached: Boolean = false
 )
 
 data class DoctorDetailUi(

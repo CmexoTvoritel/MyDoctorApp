@@ -4,6 +4,7 @@ import android.content.Context
 import com.asc.mydoctorapp.core.database.AppDatabase
 import com.asc.mydoctorapp.core.database.dao.RecordDao
 import com.asc.mydoctorapp.core.database.dao.FavoriteDoctorDao
+import com.asc.mydoctorapp.core.database.dao.ChatSessionDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -29,5 +30,10 @@ object DatabaseModule {
     @Provides
     fun provideFavoriteDoctorDao(database: AppDatabase): FavoriteDoctorDao {
         return database.favoriteDoctorDao()
+    }
+    
+    @Provides
+    fun provideChatSessionDao(database: AppDatabase): ChatSessionDao {
+        return database.chatSessionDao()
     }
 }

@@ -38,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -125,7 +126,7 @@ fun DoctorDetailScreen(
         )
         
         // Отображаем загрузку, если isLoading = true
-        if (state?.isLoading == true) {
+        if (state?.isLoadingDoctor == true || state?.isLoadingRecords == true) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -419,11 +420,30 @@ fun DoctorDetailScreen(
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
+                // Сообщение о лимите записей
+                if (state?.isRecordLimitReached == true) {
+                    Text(
+                        text = "Превышен лимит запросов, ожидайте обработки текущих записей",
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            color = Color(0xFFEA4D4D),
+                            fontWeight = FontWeight.Medium
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 8.dp)
+                    )
+                }
+                
                 // Кнопка записи
                 Button(
                     onClick = { viewModel.obtainEvent(DoctorDetailEvent.OnBookClick) },
+                    enabled = state?.isRecordLimitReached != true,
                     shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = accentColor),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (state?.isRecordLimitReached == true) Color.Gray else accentColor,
+                        disabledContainerColor = Color.Gray
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(76.dp)
@@ -431,7 +451,9 @@ fun DoctorDetailScreen(
                 ) {
                     Text(
                         text = "Записаться на приём",
-                        style = buttonTextStyle
+                        style = buttonTextStyle.copy(
+                            color = if (state?.isRecordLimitReached == true) Color.White.copy(alpha = 0.6f) else Color.White
+                        )
                     )
                 }
                 

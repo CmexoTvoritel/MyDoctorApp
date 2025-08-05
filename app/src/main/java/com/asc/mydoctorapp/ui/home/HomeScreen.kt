@@ -121,7 +121,7 @@ fun HomeScreen(
                 onValueChange = { viewModel.obtainEvent(HomeEvent.OnQueryChanged(it)) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp)
+                    .height(56.dp)
                     .padding(horizontal = 24.dp),
                 placeholder = { Text(" ") },
                 singleLine = true,
@@ -176,9 +176,7 @@ fun HomeScreen(
 
                         OutlinedButton(
                             onClick = { viewModel.obtainEvent(HomeEvent.OnAiChatStartClick) },
-                            modifier = Modifier
-                                .width(90.dp)
-                                .height(32.dp),
+                            modifier = Modifier,
                             shape = RoundedCornerShape(8.dp),
                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                             border = androidx.compose.foundation.BorderStroke(
@@ -187,6 +185,7 @@ fun HomeScreen(
                             )
                         ) {
                             Text(
+                                modifier = Modifier.padding(all = 2.dp),
                                 text = "Начать",
                                 style = TextStyle(
                                     fontSize = 17.sp,

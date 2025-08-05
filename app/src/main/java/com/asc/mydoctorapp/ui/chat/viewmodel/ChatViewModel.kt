@@ -1,6 +1,8 @@
 package com.asc.mydoctorapp.ui.chat.viewmodel
 
 import com.asc.mydoctorapp.core.domain.usecase.SendPromptUseCase
+import com.asc.mydoctorapp.core.domain.usecase.ChatSessionUseCase
+import com.asc.mydoctorapp.core.domain.usecase.UserInfoUseCase
 import com.diveomedia.little.stories.bedtime.books.kids.core.ui.viewmodel.BaseSharedViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
@@ -9,10 +11,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ChatViewModel @Inject constructor(
-    private val sendPromptUseCase: SendPromptUseCase
+    private val sendPromptUseCase: SendPromptUseCase,
+    private val chatSessionUseCase: ChatSessionUseCase,
+    private val userInfoUseCase: UserInfoUseCase
 ) : BaseSharedViewModel<ChatUIState, ChatAction, ChatEvent>(
     initialState = ChatUIState()
 ) {
+
+    init {
+        loadRemainingSessions()
+    }
 
     override fun obtainEvent(viewEvent: ChatEvent) {
         when (viewEvent) {
@@ -60,8 +68,26 @@ class ChatViewModel @Inject constructor(
     }
 
     private fun handleStartClick() {
-        updateViewState { state ->
-            state.copy(screenState = ScreenState.CHAT)
+        viewModelScope.launch {
+            try {
+                val userEmail = userInfoUseCase.getUserEmail()
+                val sessionStarted = chatSessionUseCase.startNewSession(userEmail)
+                
+                if (sessionStarted) {
+                    updateViewState { state ->
+                        state.copy(screenState = ScreenState.CHAT)
+                    }
+                    // Обновляем количество оставшихся сессий после начала новой
+                    loadRemainingSessions()
+                } else {
+                    // Превышен лимит сессий - не переключаемся в режим чата
+                    updateViewState { state ->
+                        state.copy(isSessionLimitReached = true)
+                    }
+                }
+            } catch (e: Exception) {
+                // Обработка ошибок
+            }
         }
     }
     
@@ -171,6 +197,29 @@ class ChatViewModel @Inject constructor(
             }
             
             delay(30) // Задержка 30 мс между появлением символов
+        }
+    }
+
+    private fun loadRemainingSessions() {
+        viewModelScope.launch {
+            try {
+                val userEmail = userInfoUseCase.getUserEmail()
+                val remainingSessions = chatSessionUseCase.getRemainingSessionsForToday(userEmail)
+                
+                updateViewState { state ->
+                    state.copy(
+                        remainingSessions = remainingSessions,
+                        isSessionLimitReached = remainingSessions <= 0
+                    )
+                }
+            } catch (e: Exception) {
+                updateViewState { state ->
+                    state.copy(
+                        remainingSessions = 0,
+                        isSessionLimitReached = true
+                    )
+                }
+            }
         }
     }
 }
