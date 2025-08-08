@@ -1,7 +1,8 @@
 package com.asc.mydoctorapp.ui.registration.viewmodel
 
 import android.util.Patterns
-import androidx.lifecycle.viewModelScope
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import com.asc.mydoctorapp.core.domain.usecase.RegisterUserUseCase
 import com.asc.mydoctorapp.core.utils.PreferencesManager
 import com.asc.mydoctorapp.ui.registration.viewmodel.model.RegistrationAction
@@ -29,6 +30,7 @@ class RegistrationViewModel @Inject constructor(
             is RegistrationEvent.OnNameChanged -> handleNameChange(viewEvent.name)
             is RegistrationEvent.OnBirthDateChanged -> handleBirthDateChange(viewEvent.birthDate)
             is RegistrationEvent.OnPasswordChanged -> handlePasswordChange(viewEvent.password)
+            is RegistrationEvent.OnPhoneChanged -> handlePhoneChange(viewEvent.phone)
             is RegistrationEvent.OnPasswordVisibilityToggle -> togglePasswordVisibility()
             is RegistrationEvent.OnConsentToggle -> handleConsentToggle(viewEvent.checked)
             is RegistrationEvent.OnRegisterClick -> handleRegisterClick()
@@ -71,6 +73,38 @@ class RegistrationViewModel @Inject constructor(
         }
     }
 
+    private fun handlePhoneChange(phone: TextFieldValue) {
+        val newText = phone.text
+        val newSelection = phone.selection
+        
+        // Убеждаемся, что текст всегда начинается с "+7"
+        val formattedText = if (newText.startsWith("+7")) {
+            // Ограничиваем до 12 символов максимум
+            if (newText.length <= 12) newText else newText.substring(0, 12)
+        } else {
+            "+7"
+        }
+        
+        // Контролируем позицию курсора - он не должен быть левее позиции 2 (после "+7")
+        val safeSelection = when {
+            newSelection.start < 2 -> TextRange(2)
+            newSelection.start > formattedText.length -> TextRange(formattedText.length)
+            else -> newSelection
+        }
+        
+        val finalPhone = TextFieldValue(
+            text = formattedText,
+            selection = safeSelection
+        )
+        
+        updateViewState { state ->
+            state.copy(
+                phone = finalPhone,
+                isPhoneError = false
+            )
+        }
+    }
+
     private fun togglePasswordVisibility() {
         updateViewState { state ->
             state.copy(
@@ -92,9 +126,10 @@ class RegistrationViewModel @Inject constructor(
         val name = viewStates().value?.name
         val birthDate = viewStates().value?.birthDate
         val password = viewStates().value?.password
+        val phone = viewStates().value?.phone?.text
         val isConsentGiven = viewStates().value?.consentGiven
 
-        if (login == null || name == null || birthDate == null || password == null || isConsentGiven == null)
+        if (login == null || name == null || birthDate == null || password == null || phone == null || isConsentGiven == null)
             return
 
         var hasError = false
@@ -106,7 +141,7 @@ class RegistrationViewModel @Inject constructor(
                 )
             }
             sendViewAction(action = RegistrationAction.ShowError(
-                "Неверный формат логина"
+                "Неверный формат email"
             ))
             hasError = true
         }
@@ -135,14 +170,26 @@ class RegistrationViewModel @Inject constructor(
             hasError = true
         }
 
-        if (password.isEmpty()) {
+        if (!isValidPassword(password)) {
             updateViewState { state ->
                 state.copy(
                     isPasswordError = true
                 )
             }
             sendViewAction(action = RegistrationAction.ShowError(
-                "Пароль не может быть пустым"
+                "Пароль должен содержать минимум 8 символов, включая хотя бы одну цифру и одну букву"
+            ))
+            hasError = true
+        }
+
+        if (!isValidPhone(phone)) {
+            updateViewState { state ->
+                state.copy(
+                    isPhoneError = true
+                )
+            }
+            sendViewAction(action = RegistrationAction.ShowError(
+                "Номер телефона должен содержать 10 цифр после +7"
             ))
             hasError = true
         }
@@ -181,8 +228,11 @@ class RegistrationViewModel @Inject constructor(
                     return@launch
                 }
 
+                // Убираем "+7" из номера телефона для отправки в API
+                val phoneForApi = phone.removePrefix("+7")
+
                 // Call the use case to register the user
-                val userToken = registerUserUseCase(name, birthDateFormatted, login, password)
+                val userToken = registerUserUseCase(name, birthDateFormatted, login, password, phoneForApi)
                 
                 // Save the token to preferences
                 preferencesManager.userToken = userToken.value
@@ -206,5 +256,19 @@ class RegistrationViewModel @Inject constructor(
 
     private fun isValidLogin(login: String): Boolean {
         return login.isNotEmpty() && Patterns.EMAIL_ADDRESS.matcher(login).matches()
+    }
+
+    private fun isValidPassword(password: String): Boolean {
+        if (password.length < 8) return false
+        
+        val hasDigit = password.any { it.isDigit() }
+        val hasLetter = password.any { it.isLetter() }
+        
+        return hasDigit && hasLetter
+    }
+
+    private fun isValidPhone(phone: String): Boolean {
+        // Телефон должен начинаться с "+7" и иметь ровно 10 цифр после "+7"
+        return phone.startsWith("+7") && phone.length == 12 && phone.substring(2).all { it.isDigit() }
     }
 }

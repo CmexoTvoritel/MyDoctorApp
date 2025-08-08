@@ -42,11 +42,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
@@ -178,6 +180,28 @@ fun RegistrationScreen(
                             errorBorderColor = Color.Red
                         ),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                    
+                    // Поле номера телефона
+                    OutlinedTextField(
+                        value = state?.phone ?: TextFieldValue(text = "+7", selection = TextRange(2)),
+                        onValueChange = { newValue ->
+                            viewModel.obtainEvent(RegistrationEvent.OnPhoneChanged(newValue))
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        textStyle = TextStyle(
+                            fontSize = 20.sp
+                        ),
+                        label = { Text(text = "Номер телефона") },
+                        singleLine = true,
+                        isError = state?.isPhoneError ?: false,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = TealColor,
+                            unfocusedBorderColor = Color.Gray,
+                            errorBorderColor = Color.Red
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                     )
                     
                     // Поле пароля

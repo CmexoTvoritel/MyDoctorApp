@@ -41,9 +41,9 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
     
-    override suspend fun register(name: String, birth: LocalDate, login: String, password: String): UserToken {
+    override suspend fun register(name: String, birth: LocalDate, login: String, password: String, phone: String): UserToken {
         return try {
-            val requestBody = formRequestBodyForRegister(name, birth, login, password)
+            val requestBody = formRequestBodyForRegister(name, birth, login, password, phone)
             val response = apiService.register(requestBody)
             
             if (response.isSuccessful) {
@@ -143,7 +143,8 @@ class AuthRepositoryImpl @Inject constructor(
         name: String,
         birth: LocalDate,
         login: String,
-        password: String
+        password: String,
+        phone: String
     ): RequestBody {
         val dateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
         
@@ -152,6 +153,7 @@ class AuthRepositoryImpl @Inject constructor(
             put("birth", birth.format(dateFormatter))
             put("login", login)
             put("password", password)
+            put("phone", phone)
         }.toString()
         return parameters.toRequestBody(mediaTypeJson.toMediaTypeOrNull())
     }
